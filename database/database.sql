@@ -12,3 +12,20 @@ CREATE TABLE uzytkownicy (
     aktywny TINYINT(1) NOT NULL DEFAULT 1,
     data_utworzenia TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE kategorie_uslug (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nazwa VARCHAR(100) NOT NULL,
+    opis TEXT
+);
+
+CREATE TABLE uslugi (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    kategoria_id INT NOT NULL,
+    nazwa VARCHAR(100) NOT NULL,
+    opis TEXT,
+    czas_trwania INT NOT NULL,
+    cena DECIMAL(8,2) NOT NULL,
+    aktywna TINYINT(1) NOT NULL DEFAULT 1,
+    FOREIGN KEY (kategoria_id) REFERENCES kategorie_uslug(id)
+);
