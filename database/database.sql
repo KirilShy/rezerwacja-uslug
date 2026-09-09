@@ -29,3 +29,11 @@ CREATE TABLE uslugi (
     aktywna TINYINT(1) NOT NULL DEFAULT 1,
     FOREIGN KEY (kategoria_id) REFERENCES kategorie_uslug(id)
 );
+
+CREATE TABLE pracownicy (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    uzytkownik_id INT NOT NULL UNIQUE,
+    opis TEXT,
+    aktywny TINYINT(1) NOT NULL DEFAULT 1,
+    FOREIGN KEY (uzytkownik_id) REFERENCES uzytkownicy(id)
+);
