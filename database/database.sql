@@ -37,3 +37,11 @@ CREATE TABLE pracownicy (
     aktywny TINYINT(1) NOT NULL DEFAULT 1,
     FOREIGN KEY (uzytkownik_id) REFERENCES uzytkownicy(id)
 );
+
+CREATE TABLE pracownicy_uslugi (
+    pracownik_id INT NOT NULL,
+    usluga_id INT NOT NULL,
+    PRIMARY KEY (pracownik_id, usluga_id),
+    FOREIGN KEY (pracownik_id) REFERENCES pracownicy(id),
+    FOREIGN KEY (usluga_id) REFERENCES uslugi(id)
+);
