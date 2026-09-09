@@ -1,3 +1,16 @@
-Prosta aplikacja internetowa do rezerwacji usług.
+# System rezerwacji usług - serwis komputerowy
 
-Technologie: HTML, CSS, PHP, MySQL.
+Prosta aplikacja internetowa do rezerwacji usług serwisu komputerowego.
+
+## Autorzy
+
+- Kyrylo Shynkarenko
+- Wiktor Szymański
+
+## Technologie
+
+- PHP
+- HTML5
+- CSS3
+- JavaScript
+- MySQL
