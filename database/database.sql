@@ -54,3 +54,20 @@ CREATE TABLE dostepnosc_pracownikow (
     godzina_do TIME NOT NULL,
     FOREIGN KEY (pracownik_id) REFERENCES pracownicy(id)
 );
+
+CREATE TABLE rezerwacje (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    uzytkownik_id INT NOT NULL,
+    pracownik_id INT NOT NULL,
+    usluga_id INT NOT NULL,
+    data_rezerwacji DATE NOT NULL,
+    godzina_od TIME NOT NULL,
+    godzina_do TIME NOT NULL,
+    status ENUM('oczekujaca', 'potwierdzona', 'zrealizowana', 'anulowana') NOT NULL DEFAULT 'oczekujaca',
+    komentarz TEXT,
+    data_utworzenia TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (uzytkownik_id) REFERENCES uzytkownicy(id),
+    FOREIGN KEY (pracownik_id) REFERENCES pracownicy(id),
+    FOREIGN KEY (usluga_id) REFERENCES uslugi(id),
+    INDEX idx_pracownik_data (pracownik_id, data_rezerwacji)
+);
