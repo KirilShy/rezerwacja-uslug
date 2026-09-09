@@ -45,3 +45,12 @@ CREATE TABLE pracownicy_uslugi (
     FOREIGN KEY (pracownik_id) REFERENCES pracownicy(id),
     FOREIGN KEY (usluga_id) REFERENCES uslugi(id)
 );
+
+CREATE TABLE dostepnosc_pracownikow (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    pracownik_id INT NOT NULL,
+    dzien_tygodnia TINYINT NOT NULL COMMENT '1-poniedzialek ... 7-niedziela',
+    godzina_od TIME NOT NULL,
+    godzina_do TIME NOT NULL,
+    FOREIGN KEY (pracownik_id) REFERENCES pracownicy(id)
+);
