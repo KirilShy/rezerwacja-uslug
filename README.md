@@ -5,7 +5,7 @@ Prosta aplikacja internetowa do rezerwacji usług serwisu komputerowego.
 ## Autorzy
 
 - Kyrylo Shynkarenko
-- Wiktor Szymański
+  
 
 ## Technologie
 
