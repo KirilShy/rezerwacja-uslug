@@ -1,4 +1,5 @@
 <?php
+session_start();
 require __DIR__ . '/../config/database.php';
 
 $kategorie = $pdo->query('SELECT * FROM kategorie_uslug ORDER BY nazwa')->fetchAll();
@@ -20,6 +21,16 @@ foreach ($uslugi as $usluga) {
 </head>
 <body>
     <h1>System rezerwacji usług - serwis komputerowy</h1>
+
+    <nav>
+        <?php if (isset($_SESSION['user_id'])): ?>
+            <span>Witaj, <?= htmlspecialchars($_SESSION['user_imie']) ?></span>
+            | <a href="wyloguj.php">Wyloguj</a>
+        <?php else: ?>
+            <a href="logowanie.php">Zaloguj</a>
+            | <a href="rejestracja.php">Zarejestruj sie</a>
+        <?php endif; ?>
+    </nav>
 
     <div class="uslugi">
         <?php foreach ($kategorie as $kategoria): ?>
