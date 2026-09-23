@@ -1,15 +1,21 @@
 <?php
 
-$host = 'localhost';
-$dbname = 'rezerwacja_uslug';
-$user = 'root';
-$pass = '';
+$configLocal = __DIR__ . '/config.local.php';
+
+if (file_exists($configLocal)) {
+    require $configLocal;
+} else {
+    define('DB_HOST', 'localhost');
+    define('DB_NAME', 'rezerwacja_uslug');
+    define('DB_USER', 'root');
+    define('DB_PASS', '');
+}
 
 try {
     $pdo = new PDO(
-        "mysql:host=$host;dbname=$dbname;charset=utf8mb4",
-        $user,
-        $pass,
+        'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4',
+        DB_USER,
+        DB_PASS,
         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
 } catch (PDOException $e) {
