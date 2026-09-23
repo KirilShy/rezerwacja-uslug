@@ -27,7 +27,9 @@ CREATE TABLE uslugi (
     czas_trwania INT NOT NULL,
     cena DECIMAL(8,2) NOT NULL,
     aktywna TINYINT(1) NOT NULL DEFAULT 1,
-    FOREIGN KEY (kategoria_id) REFERENCES kategorie_uslug(id)
+    FOREIGN KEY (kategoria_id) REFERENCES kategorie_uslug(id) ON DELETE RESTRICT,
+    CHECK (czas_trwania > 0),
+    CHECK (cena >= 0)
 );
 
 CREATE TABLE pracownicy (
@@ -35,15 +37,15 @@ CREATE TABLE pracownicy (
     uzytkownik_id INT NOT NULL UNIQUE,
     opis TEXT,
     aktywny TINYINT(1) NOT NULL DEFAULT 1,
-    FOREIGN KEY (uzytkownik_id) REFERENCES uzytkownicy(id)
+    FOREIGN KEY (uzytkownik_id) REFERENCES uzytkownicy(id) ON DELETE RESTRICT
 );
 
 CREATE TABLE pracownicy_uslugi (
     pracownik_id INT NOT NULL,
     usluga_id INT NOT NULL,
     PRIMARY KEY (pracownik_id, usluga_id),
-    FOREIGN KEY (pracownik_id) REFERENCES pracownicy(id),
-    FOREIGN KEY (usluga_id) REFERENCES uslugi(id)
+    FOREIGN KEY (pracownik_id) REFERENCES pracownicy(id) ON DELETE CASCADE,
+    FOREIGN KEY (usluga_id) REFERENCES uslugi(id) ON DELETE CASCADE
 );
 
 CREATE TABLE dostepnosc_pracownikow (
@@ -52,7 +54,10 @@ CREATE TABLE dostepnosc_pracownikow (
     dzien_tygodnia TINYINT NOT NULL COMMENT '1-poniedzialek ... 7-niedziela',
     godzina_od TIME NOT NULL,
     godzina_do TIME NOT NULL,
-    FOREIGN KEY (pracownik_id) REFERENCES pracownicy(id)
+    FOREIGN KEY (pracownik_id) REFERENCES pracownicy(id) ON DELETE CASCADE,
+    UNIQUE KEY uq_pracownik_dzien (pracownik_id, dzien_tygodnia),
+    CHECK (dzien_tygodnia BETWEEN 1 AND 7),
+    CHECK (godzina_do > godzina_od)
 );
 
 CREATE TABLE rezerwacje (
@@ -66,10 +71,12 @@ CREATE TABLE rezerwacje (
     status ENUM('oczekujaca', 'potwierdzona', 'zrealizowana', 'anulowana') NOT NULL DEFAULT 'oczekujaca',
     komentarz TEXT,
     data_utworzenia TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (uzytkownik_id) REFERENCES uzytkownicy(id),
-    FOREIGN KEY (pracownik_id) REFERENCES pracownicy(id),
-    FOREIGN KEY (usluga_id) REFERENCES uslugi(id),
-    INDEX idx_pracownik_data (pracownik_id, data_rezerwacji)
+    FOREIGN KEY (uzytkownik_id) REFERENCES uzytkownicy(id) ON DELETE RESTRICT,
+    FOREIGN KEY (pracownik_id) REFERENCES pracownicy(id) ON DELETE RESTRICT,
+    FOREIGN KEY (usluga_id) REFERENCES uslugi(id) ON DELETE RESTRICT,
+    CHECK (godzina_do > godzina_od),
+    INDEX idx_pracownik_data (pracownik_id, data_rezerwacji),
+    INDEX idx_uzytkownik (uzytkownik_id)
 );
 
 -- Dane testowe (haslo dla wszystkich kont: haslo123)
