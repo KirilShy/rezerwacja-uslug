@@ -25,6 +25,7 @@ foreach ($uslugi as $usluga) {
     <nav>
         <?php if (zalogowany()): ?>
             <span>Witaj, <?= htmlspecialchars($_SESSION['user_imie']) ?></span>
+            | <a href="<?= adresPanelu($_SESSION['user_rola']) ?>">Moj panel</a>
             | <a href="wyloguj.php">Wyloguj</a>
         <?php else: ?>
             <a href="logowanie.php">Zaloguj</a>

@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         zalogujUzytkownika((int) $uzytkownik['id'], $uzytkownik['imie'], $uzytkownik['rola']);
 
-        header('Location: index.php');
+        header('Location: ' . adresPanelu($uzytkownik['rola']));
         exit;
     }
 }
