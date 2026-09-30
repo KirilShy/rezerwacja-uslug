@@ -1,5 +1,5 @@
 <?php
-session_start();
+require __DIR__ . '/../includes/auth.php';
 require __DIR__ . '/../config/database.php';
 
 $kategorie = $pdo->query('SELECT * FROM kategorie_uslug ORDER BY nazwa')->fetchAll();
@@ -23,7 +23,7 @@ foreach ($uslugi as $usluga) {
     <h1>System rezerwacji usług - serwis komputerowy</h1>
 
     <nav>
-        <?php if (isset($_SESSION['user_id'])): ?>
+        <?php if (zalogowany()): ?>
             <span>Witaj, <?= htmlspecialchars($_SESSION['user_imie']) ?></span>
             | <a href="wyloguj.php">Wyloguj</a>
         <?php else: ?>
