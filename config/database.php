@@ -19,5 +19,6 @@ try {
         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
 } catch (PDOException $e) {
-    die('Blad polaczenia z baza danych: ' . $e->getMessage());
+    error_log($e->getMessage());
+    die('Blad polaczenia z baza danych. Sprobuj ponownie pozniej.');
 }
