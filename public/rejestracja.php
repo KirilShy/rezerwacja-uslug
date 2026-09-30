@@ -34,9 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $stmt->execute([$imie, $nazwisko, $email, $hash, $telefon, 'klient']);
 
-            $_SESSION['user_id'] = $pdo->lastInsertId();
-            $_SESSION['user_imie'] = $imie;
-            $_SESSION['user_rola'] = 'klient';
+            zalogujUzytkownika((int) $pdo->lastInsertId(), $imie, 'klient');
 
             header('Location: index.php');
             exit;

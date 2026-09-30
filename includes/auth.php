@@ -7,6 +7,16 @@ function zalogowany(): bool
     return isset($_SESSION['user_id']);
 }
 
+function zalogujUzytkownika(int $id, string $imie, string $rola): void
+{
+    // nowe id sesji po zalogowaniu chroni przed przejeciem starej sesji
+    session_regenerate_id(true);
+
+    $_SESSION['user_id'] = $id;
+    $_SESSION['user_imie'] = $imie;
+    $_SESSION['user_rola'] = $rola;
+}
+
 function wymagajLogowania(): void
 {
     if (!zalogowany()) {

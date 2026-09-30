@@ -17,9 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!$uzytkownik['aktywny']) {
         $blad = 'To konto zostalo zdezaktywowane.';
     } else {
-        $_SESSION['user_id'] = $uzytkownik['id'];
-        $_SESSION['user_imie'] = $uzytkownik['imie'];
-        $_SESSION['user_rola'] = $uzytkownik['rola'];
+        zalogujUzytkownika((int) $uzytkownik['id'], $uzytkownik['imie'], $uzytkownik['rola']);
 
         header('Location: index.php');
         exit;
