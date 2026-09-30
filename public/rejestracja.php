@@ -10,6 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $telefon = trim($_POST['telefon'] ?? '');
     $haslo = $_POST['haslo'] ?? '';
+    $haslo2 = $_POST['haslo2'] ?? '';
 
     if ($imie === '' || $nazwisko === '' || $email === '' || $haslo === '') {
         $blad = 'Wszystkie pola oprocz telefonu sa wymagane.';
@@ -17,6 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $blad = 'Podaj poprawny adres email.';
     } elseif (strlen($haslo) < 6) {
         $blad = 'Haslo musi miec co najmniej 6 znakow.';
+    } elseif ($haslo !== $haslo2) {
+        $blad = 'Hasla nie sa takie same.';
     } else {
         $stmt = $pdo->prepare('SELECT id FROM uzytkownicy WHERE email = ?');
         $stmt->execute([$email]);
@@ -61,6 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <label>Email: <input type="email" name="email" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"></label><br>
         <label>Telefon: <input type="text" name="telefon" value="<?= htmlspecialchars($_POST['telefon'] ?? '') ?>"></label><br>
         <label>Haslo: <input type="password" name="haslo"></label><br>
+        <label>Powtorz haslo: <input type="password" name="haslo2"></label><br>
         <button type="submit">Zarejestruj sie</button>
     </form>
 
