@@ -1,5 +1,126 @@
+:root {
+    --kolor-glowny: #1f4e79;
+    --kolor-tlo: #f4f6f9;
+    --kolor-tekst: #222;
+    --kolor-ramka: #ccd3dc;
+    --kolor-blad: #b3261e;
+    --kolor-sukces: #1e7b34;
+}
+
+* {
+    box-sizing: border-box;
+}
+
 body {
     font-family: Arial, sans-serif;
     margin: 0;
-    padding: 0;
+    padding: 0 16px 32px;
+    background: var(--kolor-tlo);
+    color: var(--kolor-tekst);
+    line-height: 1.5;
+}
+
+h1 {
+    color: var(--kolor-glowny);
+    max-width: 800px;
+    margin: 24px auto 8px;
+}
+
+nav {
+    max-width: 800px;
+    margin: 0 auto 24px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--kolor-ramka);
+}
+
+a {
+    color: var(--kolor-glowny);
+}
+
+form {
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 24px;
+    background: #fff;
+    border: 1px solid var(--kolor-ramka);
+    border-radius: 8px;
+}
+
+label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: bold;
+}
+
+input {
+    display: block;
+    width: 100%;
+    margin-top: 4px;
+    padding: 8px 10px;
+    font-size: 1rem;
+    font-weight: normal;
+    border: 1px solid var(--kolor-ramka);
+    border-radius: 4px;
+}
+
+input:focus {
+    outline: 2px solid var(--kolor-glowny);
+    border-color: var(--kolor-glowny);
+}
+
+button {
+    width: 100%;
+    margin-top: 12px;
+    padding: 10px;
+    font-size: 1rem;
+    color: #fff;
+    background: var(--kolor-glowny);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+.blad,
+.sukces {
+    max-width: 420px;
+    margin: 0 auto 16px;
+    padding: 10px 14px;
+    border-radius: 4px;
+}
+
+.blad {
+    color: var(--kolor-blad);
+    background: #fdecea;
+    border: 1px solid var(--kolor-blad);
+}
+
+.sukces {
+    color: var(--kolor-sukces);
+    background: #e8f5ec;
+    border: 1px solid var(--kolor-sukces);
+}
+
+form + p {
+    text-align: center;
+}
+
+.uslugi {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.kategoria {
+    margin-bottom: 20px;
+    padding: 16px 20px;
+    background: #fff;
+    border: 1px solid var(--kolor-ramka);
+    border-radius: 8px;
+}
+
+.kategoria ul {
+    padding-left: 20px;
 }
