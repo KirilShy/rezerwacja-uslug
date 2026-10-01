@@ -14,6 +14,7 @@ wymagajRoli('pracownik');
 
     <nav>
         <span>Zalogowany: <?= htmlspecialchars($_SESSION['user_imie']) ?></span>
+        | <a href="profil.php">Moje konto</a>
         | <a href="index.php">Strona glowna</a>
         | <a href="wyloguj.php">Wyloguj</a>
     </nav>
