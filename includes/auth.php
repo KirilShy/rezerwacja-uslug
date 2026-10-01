@@ -34,3 +34,16 @@ function wymagajRoli(string $rola): void
         exit('Brak dostepu do tej strony.');
     }
 }
+
+function adresPanelu(string $rola): string
+{
+    if ($rola === 'administrator') {
+        return 'panel_admina.php';
+    }
+
+    if ($rola === 'pracownik') {
+        return 'panel_pracownika.php';
+    }
+
+    return 'panel_klienta.php';
+}

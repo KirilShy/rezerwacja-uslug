@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             zalogujUzytkownika((int) $pdo->lastInsertId(), $imie, 'klient');
 
-            header('Location: index.php');
+            header('Location: panel_klienta.php');
             exit;
         }
     }
