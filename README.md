@@ -24,7 +24,7 @@ Prosta aplikacja internetowa do rezerwacji usług serwisu komputerowego.
 2. Ustaw dane polaczenia z baza w `config/database.php` (host, nazwa bazy, uzytkownik, haslo).
 3. Uruchom wbudowany serwer PHP z katalogu glownego projektu:
    ```
-   php -S localhost:8000 -t public
+   php -S localhost:8000
    ```
 4. Otworz w przegladarce `http://localhost:8000`.
 
