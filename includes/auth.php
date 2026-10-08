@@ -19,7 +19,21 @@ function zalogujUzytkownika(int $id, string $imie, string $rola): void
 
 function wymagajLogowania(): void
 {
+    global $pdo;
+
     if (!zalogowany()) {
+        header('Location: logowanie.php');
+        exit;
+    }
+
+    // konto moglo zostac zdezaktywowane po zalogowaniu, wiec sprawdzamy baze przy kazdym wejsciu
+    require_once __DIR__ . '/../config/database.php';
+    $stmt = $pdo->prepare('SELECT aktywny FROM uzytkownicy WHERE id = ?');
+    $stmt->execute([$_SESSION['user_id']]);
+
+    if (!$stmt->fetchColumn()) {
+        $_SESSION = [];
+        session_destroy();
         header('Location: logowanie.php');
         exit;
     }
