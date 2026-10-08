@@ -1,5 +1,12 @@
 <?php
 
+// nieobsluzony blad trafia do logu serwera, a uzytkownik widzi tylko ogolny komunikat
+set_exception_handler(function (Throwable $e): void {
+    error_log((string) $e);
+    http_response_code(500);
+    echo 'Wystapil blad. Sprobuj ponownie pozniej.';
+});
+
 session_start();
 
 function zalogowany(): bool
