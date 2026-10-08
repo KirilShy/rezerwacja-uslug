@@ -2,13 +2,12 @@
 require __DIR__ . '/../includes/auth.php';
 require __DIR__ . '/../config/database.php';
 
-const MAX_PROB_LOGOWANIA = 5;
-
 $blad = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $haslo = $_POST['haslo'] ?? '';
+    $limitProb = 5;
 
     $stmt = $pdo->prepare(
         'SELECT COUNT(*) FROM proby_logowania WHERE email = ? AND data_proby > NOW() - INTERVAL 15 MINUTE'
@@ -20,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->execute([$email]);
     $uzytkownik = $stmt->fetch();
 
-    if ($nieudaneProby >= MAX_PROB_LOGOWANIA) {
+    if ($nieudaneProby >= $limitProb) {
         $blad = 'Za duzo nieudanych prob logowania. Sprobuj ponownie za 15 minut.';
     } elseif (!$uzytkownik || !password_verify($haslo, $uzytkownik['haslo'])) {
         $stmt = $pdo->prepare('INSERT INTO proby_logowania (email, adres_ip) VALUES (?, ?)');
