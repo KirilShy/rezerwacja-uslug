@@ -2,6 +2,11 @@
 require __DIR__ . '/../includes/auth.php';
 require __DIR__ . '/../config/database.php';
 
+if (zalogowany()) {
+    header('Location: ' . adresPanelu($_SESSION['user_rola']));
+    exit;
+}
+
 $blad = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
