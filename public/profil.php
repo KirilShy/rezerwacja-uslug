@@ -60,5 +60,7 @@ $uzytkownik = $stmt->fetch();
         <label>Telefon: <input type="text" name="telefon" value="<?= htmlspecialchars($_POST['telefon'] ?? (string) $uzytkownik['telefon']) ?>"></label><br>
         <button type="submit">Zapisz</button>
     </form>
+
+    <p><a href="zmiana_hasla.php">Zmien haslo</a></p>
 </body>
 </html>
