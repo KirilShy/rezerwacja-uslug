@@ -1,5 +1,16 @@
 <?php
 
+// nieobsluzony blad trafia do logu serwera, a uzytkownik widzi tylko ogolny komunikat
+set_exception_handler(function (Throwable $e): void {
+    error_log((string) $e);
+    http_response_code(500);
+    echo 'Wystapil blad. Sprobuj ponownie pozniej.';
+});
+
+// httponly: JavaScript nie odczyta ciasteczka sesji, samesite: przegladarka nie wysle go z obcych stron
+// strict_mode: serwer nie przyjmie identyfikatora sesji, ktorego sam nie utworzyl
+ini_set('session.use_strict_mode', '1');
+session_set_cookie_params(['httponly' => true, 'samesite' => 'Lax']);
 session_start();
 
 function zalogowany(): bool
