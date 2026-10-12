@@ -1,126 +1,283 @@
+
 :root {
+    color-scheme: light;
+
     --kolor-glowny: #1f4e79;
+    --kolor-glowny-hover: #173b5d;
     --kolor-tlo: #f4f6f9;
+    --kolor-powierzchni: #fff;
     --kolor-tekst: #222;
+    --kolor-tekst-pomocniczy: #555;
     --kolor-ramka: #ccd3dc;
     --kolor-blad: #b3261e;
+    --kolor-blad-tlo: #fdecea;
     --kolor-sukces: #1e7b34;
+    --kolor-sukces-tlo: #e8f5ec;
+
+    --szerokosc-tresci: 800px;
+    --szerokosc-formularza: 420px;
+
+    --odstep-xs: 4px;
+    --odstep-sm: 8px;
+    --odstep-md: 12px;
+    --odstep-lg: 16px;
+    --odstep-xl: 24px;
+    --odstep-xxl: 32px;
+
+    --promien: 6px;
+    --cien: 0 2px 8px rgb(0 0 0 / 5%);
+    --przejscie: 0.2s ease;
 }
 
-* {
+*,
+*::before,
+*::after {
     box-sizing: border-box;
 }
 
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
 body {
-    font-family: Arial, sans-serif;
     margin: 0;
-    padding: 0 16px 32px;
-    background: var(--kolor-tlo);
+    padding: 0 var(--odstep-lg) var(--odstep-xxl);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
     color: var(--kolor-tekst);
-    line-height: 1.5;
+    background: var(--kolor-tlo);
+}
+
+
+h1,
+h2,
+p {
+    margin-top: 0;
 }
 
 h1 {
+    max-width: var(--szerokosc-tresci);
+    margin: var(--odstep-xl) auto var(--odstep-sm);
     color: var(--kolor-glowny);
-    max-width: 800px;
-    margin: 24px auto 8px;
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    line-height: 1.25;
+}
+
+h2 {
+    margin-bottom: var(--odstep-sm);
+    color: var(--kolor-glowny);
+    font-size: 1.25rem;
+    line-height: 1.35;
 }
 
 nav {
-    max-width: 800px;
-    margin: 0 auto 24px;
-    padding: 10px 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--odstep-sm);
+    max-width: var(--szerokosc-tresci);
+    margin: 0 auto var(--odstep-xl);
+    padding: var(--odstep-md) 0;
     border-bottom: 1px solid var(--kolor-ramka);
 }
 
 a {
     color: var(--kolor-glowny);
+    text-underline-offset: 3px;
+    transition: color var(--przejscie);
 }
 
+a:hover {
+    color: var(--kolor-glowny-hover);
+}
+
+a:focus-visible,
+button:focus-visible {
+    outline: 3px solid var(--kolor-glowny);
+    outline-offset: 3px;
+}
+
+
+
 form {
-    max-width: 420px;
+    width: 100%;
+    max-width: var(--szerokosc-formularza);
     margin: 0 auto;
-    padding: 24px;
-    background: #fff;
+    padding: var(--odstep-xl);
+    background: var(--kolor-powierzchni);
     border: 1px solid var(--kolor-ramka);
-    border-radius: 8px;
+    border-radius: var(--promien);
+    box-shadow: var(--cien);
 }
 
 label {
     display: block;
-    margin-bottom: 4px;
-    font-weight: bold;
+    margin-bottom: var(--odstep-xs);
+    font-weight: 700;
 }
 
-input {
+input,
+select,
+textarea {
     display: block;
     width: 100%;
-    margin-top: 4px;
-    padding: 8px 10px;
-    font-size: 1rem;
-    font-weight: normal;
+    min-height: 42px;
+    margin-top: var(--odstep-xs);
+    padding: var(--odstep-sm) 10px;
+    font: inherit;
+    color: var(--kolor-tekst);
+    background: var(--kolor-powierzchni);
     border: 1px solid var(--kolor-ramka);
     border-radius: 4px;
+    transition:
+        border-color var(--przejscie),
+        box-shadow var(--przejscie);
 }
 
-input:focus {
-    outline: 2px solid var(--kolor-glowny);
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
     border-color: var(--kolor-glowny);
+    box-shadow: 0 0 0 3px rgb(31 78 121 / 15%);
 }
+
+textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+
 
 button {
+    display: block;
     width: 100%;
-    margin-top: 12px;
-    padding: 10px;
-    font-size: 1rem;
+    min-height: 44px;
+    margin-top: var(--odstep-md);
+    padding: 10px var(--odstep-lg);
+    font: inherit;
+    font-weight: 700;
     color: #fff;
     background: var(--kolor-glowny);
-    border: none;
+    border: 1px solid var(--kolor-glowny);
     border-radius: 4px;
     cursor: pointer;
+    transition:
+        background var(--przejscie),
+        border-color var(--przejscie);
 }
 
 button:hover {
-    opacity: 0.9;
+    background: var(--kolor-glowny-hover);
+    border-color: var(--kolor-glowny-hover);
 }
+
+button:active {
+    transform: translateY(1px);
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 
 .blad,
 .sukces {
-    max-width: 420px;
-    margin: 0 auto 16px;
+    width: 100%;
+    max-width: var(--szerokosc-formularza);
+    margin: 0 auto var(--odstep-lg);
     padding: 10px 14px;
+    border: 1px solid;
     border-radius: 4px;
 }
 
 .blad {
     color: var(--kolor-blad);
-    background: #fdecea;
-    border: 1px solid var(--kolor-blad);
+    background: var(--kolor-blad-tlo);
+    border-color: var(--kolor-blad);
 }
 
 .sukces {
     color: var(--kolor-sukces);
-    background: #e8f5ec;
-    border: 1px solid var(--kolor-sukces);
+    background: var(--kolor-sukces-tlo);
+    border-color: var(--kolor-sukces);
 }
 
 form + p {
     text-align: center;
 }
 
+
 .uslugi {
-    max-width: 800px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--odstep-lg);
+    width: 100%;
+    max-width: var(--szerokosc-tresci);
     margin: 0 auto;
 }
 
 .kategoria {
-    margin-bottom: 20px;
-    padding: 16px 20px;
-    background: #fff;
+    min-width: 0;
+    margin: 0;
+    padding: var(--odstep-lg) 20px;
+    background: var(--kolor-powierzchni);
     border: 1px solid var(--kolor-ramka);
-    border-radius: 8px;
+    border-radius: var(--promien);
+    box-shadow: var(--cien);
+}
+
+.kategoria p {
+    color: var(--kolor-tekst-pomocniczy);
 }
 
 .kategoria ul {
+    margin-bottom: 0;
     padding-left: 20px;
+}
+
+.kategoria li {
+    padding-left: var(--odstep-xs);
+}
+
+.kategoria li + li {
+    margin-top: var(--odstep-md);
+}
+
+.kategoria li strong {
+    color: var(--kolor-tekst);
+}
+
+
+@media (min-width: 700px) {
+    .uslugi {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding-right: var(--odstep-sm);
+        padding-left: var(--odstep-sm);
+    }
+
+    h1 {
+        margin-top: var(--odstep-lg);
+    }
+
+    nav {
+        gap: var(--odstep-sm);
+        margin-bottom: var(--odstep-lg);
+    }
+
+    form {
+        padding: var(--odstep-lg);
+    }
+
+    .kategoria {
+        padding: var(--odstep-md);
+    }
 }
