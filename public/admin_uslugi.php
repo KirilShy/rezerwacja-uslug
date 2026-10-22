@@ -7,7 +7,21 @@ $akcja = $_SERVER['REQUEST_METHOD'] === 'POST' ? postTekst('akcja') : '';
 $kategorie = $pdo->query('SELECT id, nazwa FROM kategorie_uslug ORDER BY nazwa')->fetchAll();
 $idKategorii = array_column($kategorie, 'id');
 
-if ($akcja === 'dodaj') {
+$edytowanaId = $akcja === 'zapisz' ? liczba($_POST['id'] ?? '') : liczba($_GET['edytuj'] ?? '');
+$edytowana = null;
+
+if ($edytowanaId > 0) {
+    $stmt = $pdo->prepare('SELECT id, kategoria_id, nazwa, opis, czas_trwania, cena FROM uslugi WHERE id = ?');
+    $stmt->execute([$edytowanaId]);
+    $edytowana = $stmt->fetch() ?: null;
+
+    if (!$edytowana) {
+        ustawKomunikat('blad', 'Nie znaleziono uslugi.');
+        przekieruj('admin_uslugi.php');
+    }
+}
+
+if ($akcja === 'dodaj' || $akcja === 'zapisz') {
     $nazwa = postTekst('nazwa');
     $opis = postTekst('opis');
     $kategoriaId = liczba($_POST['kategoria_id'] ?? '');
@@ -15,8 +29,8 @@ if ($akcja === 'dodaj') {
     // przecinek tez jest akceptowany: 49,99 -> 49.99
     $cena = str_replace(',', '.', postTekst('cena'));
 
-    $stmt = $pdo->prepare('SELECT COUNT(*) FROM uslugi WHERE nazwa = ?');
-    $stmt->execute([$nazwa]);
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM uslugi WHERE nazwa = ? AND id <> ?');
+    $stmt->execute([$nazwa, $edytowanaId]);
 
     if ($nazwa === '') {
         $blad = 'Podaj nazwe uslugi.';
@@ -32,6 +46,14 @@ if ($akcja === 'dodaj') {
         $blad = 'Podaj cene jako liczbe, np. 49.99.';
     } elseif (mb_strlen($opis) > 1000) {
         $blad = 'Opis moze miec maksymalnie 1000 znakow.';
+    } elseif ($akcja === 'zapisz') {
+        $stmt = $pdo->prepare(
+            'UPDATE uslugi SET kategoria_id = ?, nazwa = ?, opis = ?, czas_trwania = ?, cena = ? WHERE id = ?'
+        );
+        $stmt->execute([$kategoriaId, $nazwa, $opis, $czas, $cena, $edytowanaId]);
+
+        ustawKomunikat('sukces', 'Zapisano zmiany w usludze.');
+        przekieruj('admin_uslugi.php');
     } else {
         $stmt = $pdo->prepare(
             'INSERT INTO uslugi (kategoria_id, nazwa, opis, czas_trwania, cena) VALUES (?, ?, ?, ?, ?)'
@@ -66,6 +88,7 @@ naglowekAdmina('Uslugi');
             <th>Cena</th>
             <th>Rezerwacje</th>
             <th>Status</th>
+            <th>Akcje</th>
         </tr>
         <?php foreach ($uslugi as $u): ?>
             <tr<?= $u['aktywna'] ? '' : ' class="nieaktywny"' ?>>
@@ -75,6 +98,11 @@ naglowekAdmina('Uslugi');
                 <td><?= number_format((float) $u['cena'], 2, ',', ' ') ?> zl</td>
                 <td><?= (int) $u['liczba_rezerwacji'] ?></td>
                 <td><span class="status"><?= $u['aktywna'] ? 'Aktywna' : 'Nieaktywna' ?></span></td>
+                <td>
+                    <div class="akcje">
+                        <a class="przycisk" href="admin_uslugi.php?edytuj=<?= (int) $u['id'] ?>">Edytuj</a>
+                    </div>
+                </td>
             </tr>
         <?php endforeach; ?>
     </table>
@@ -89,15 +117,20 @@ $pola = $blad
         'czas_trwania' => postTekst('czas_trwania'),
         'cena' => postTekst('cena'),
     ]
-    : ['nazwa' => '', 'opis' => '', 'kategoria_id' => 0, 'czas_trwania' => '30', 'cena' => ''];
+    : ($edytowana ?? ['nazwa' => '', 'opis' => '', 'kategoria_id' => 0, 'czas_trwania' => '30', 'cena' => '']);
 ?>
-<h2>Dodaj usluge</h2>
+<h2><?= $edytowana ? 'Edytuj usluge' : 'Dodaj usluge' ?></h2>
 <?php if (!$kategorie): ?>
     <p>Najpierw dodaj kategorie w zakladce <a href="admin_kategorie.php">Kategorie</a>.</p>
 <?php else: ?>
     <form method="post" class="edycja">
         <?= csrfPole() ?>
-        <input type="hidden" name="akcja" value="dodaj">
+        <?php if ($edytowana): ?>
+            <input type="hidden" name="akcja" value="zapisz">
+            <input type="hidden" name="id" value="<?= (int) $edytowana['id'] ?>">
+        <?php else: ?>
+            <input type="hidden" name="akcja" value="dodaj">
+        <?php endif; ?>
         <label>Nazwa: <input type="text" name="nazwa" maxlength="100" required value="<?= e($pola['nazwa']) ?>"></label>
         <label>Kategoria:
             <select name="kategoria_id" required>
@@ -110,8 +143,11 @@ $pola = $blad
         <label>Czas trwania (min): <input type="number" name="czas_trwania" min="5" max="480" step="5" required value="<?= e($pola['czas_trwania']) ?>"></label>
         <label>Cena (zl): <input type="text" name="cena" inputmode="decimal" required value="<?= e($pola['cena']) ?>"></label>
         <label>Opis: <textarea name="opis" maxlength="1000"><?= e($pola['opis']) ?></textarea></label>
-        <button type="submit">Dodaj</button>
+        <button type="submit"><?= $edytowana ? 'Zapisz zmiany' : 'Dodaj' ?></button>
     </form>
+    <?php if ($edytowana): ?>
+        <p><a href="admin_uslugi.php">Anuluj edycje</a></p>
+    <?php endif; ?>
 <?php endif; ?>
 <?php
 stopkaAdmina();
