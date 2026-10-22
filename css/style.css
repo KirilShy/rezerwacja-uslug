@@ -144,6 +144,13 @@ textarea:focus {
     box-shadow: 0 0 0 3px rgb(31 78 121 / 15%);
 }
 
+/* pole wewnatrz etykiety nie dziedziczy jej pogrubienia */
+label input,
+label select,
+label textarea {
+    font-weight: 400;
+}
+
 textarea {
     min-height: 100px;
     resize: vertical;
