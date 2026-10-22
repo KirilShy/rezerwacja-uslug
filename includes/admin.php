@@ -15,6 +15,20 @@ function e(?string $wartosc): string
     return htmlspecialchars($wartosc ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+// pole z formularza jako tekst; tablica lub brak pola daje pusty tekst zamiast bledu
+function postTekst(string $klucz): string
+{
+    $wartosc = $_POST[$klucz] ?? '';
+
+    return is_string($wartosc) ? trim($wartosc) : '';
+}
+
+// liczba calkowita z formularza lub adresu; cokolwiek innego daje 0
+function liczba(mixed $wartosc): int
+{
+    return is_string($wartosc) && ctype_digit($wartosc) ? (int) $wartosc : 0;
+}
+
 // komunikat przetrwa przekierowanie po zapisie formularza i pokaze sie na nastepnej stronie
 function ustawKomunikat(string $typ, string $tekst): void
 {
