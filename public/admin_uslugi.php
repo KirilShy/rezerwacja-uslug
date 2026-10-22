@@ -21,6 +21,18 @@ if ($edytowanaId > 0) {
     }
 }
 
+// nieaktywna usluga znika z oferty dla klientow, ale zostaje w historii rezerwacji
+if ($akcja === 'przelacz') {
+    $stmt = $pdo->prepare('UPDATE uslugi SET aktywna = NOT aktywna WHERE id = ?');
+    $stmt->execute([liczba($_POST['id'] ?? '')]);
+
+    ustawKomunikat(
+        $stmt->rowCount() ? 'sukces' : 'blad',
+        $stmt->rowCount() ? 'Zmieniono status uslugi.' : 'Nie znaleziono uslugi.'
+    );
+    przekieruj('admin_uslugi.php');
+}
+
 if ($akcja === 'dodaj' || $akcja === 'zapisz') {
     $nazwa = postTekst('nazwa');
     $opis = postTekst('opis');
@@ -101,6 +113,12 @@ naglowekAdmina('Uslugi');
                 <td>
                     <div class="akcje">
                         <a class="przycisk" href="admin_uslugi.php?edytuj=<?= (int) $u['id'] ?>">Edytuj</a>
+                        <form method="post" class="w-linii">
+                            <?= csrfPole() ?>
+                            <input type="hidden" name="akcja" value="przelacz">
+                            <input type="hidden" name="id" value="<?= (int) $u['id'] ?>">
+                            <button type="submit" class="maly"><?= $u['aktywna'] ? 'Dezaktywuj' : 'Aktywuj' ?></button>
+                        </form>
                     </div>
                 </td>
             </tr>
