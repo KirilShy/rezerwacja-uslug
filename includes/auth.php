@@ -2,6 +2,13 @@
 
 declare(strict_types=1);
 
+// nieobsluzony blad trafia do logu serwera, a uzytkownik widzi tylko ogolny komunikat
+set_exception_handler(function (Throwable $e): void {
+    error_log((string) $e);
+    http_response_code(500);
+    echo 'Wystapil blad. Sprobuj ponownie pozniej.';
+});
+
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     ini_set('session.use_strict_mode', '1');
