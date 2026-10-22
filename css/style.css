@@ -144,6 +144,13 @@ textarea:focus {
     box-shadow: 0 0 0 3px rgb(31 78 121 / 15%);
 }
 
+/* pole wewnatrz etykiety nie dziedziczy jej pogrubienia */
+label input,
+label select,
+label textarea {
+    font-weight: 400;
+}
+
 textarea {
     min-height: 100px;
     resize: vertical;
@@ -280,4 +287,170 @@ form + p {
     .kategoria {
         padding: var(--odstep-md);
     }
+}
+
+
+/* ===== panel administratora ===== */
+
+body.admin {
+    --szerokosc-tresci: 1100px;
+}
+
+.admin main {
+    max-width: var(--szerokosc-tresci);
+    margin: 0 auto;
+}
+
+.admin main > .blad,
+.admin main > .sukces {
+    max-width: none;
+}
+
+.admin nav a[aria-current="page"] {
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.odstep {
+    flex: 1;
+}
+
+.tabela {
+    overflow-x: auto;
+    margin-bottom: var(--odstep-xl);
+    background: var(--kolor-powierzchni);
+    border: 1px solid var(--kolor-ramka);
+    border-radius: var(--promien);
+    box-shadow: var(--cien);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 10px var(--odstep-md);
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--kolor-ramka);
+}
+
+th {
+    font-size: 0.9rem;
+    color: var(--kolor-tekst-pomocniczy);
+    background: var(--kolor-tlo);
+    white-space: nowrap;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+.nieaktywny td {
+    color: var(--kolor-tekst-pomocniczy);
+}
+
+.akcje {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--odstep-sm);
+    white-space: nowrap;
+}
+
+/* formularz z jednym przyciskiem w wierszu tabeli, bez wygladu karty */
+form.w-linii {
+    display: inline;
+    width: auto;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+}
+
+button.maly,
+a.przycisk {
+    display: inline-block;
+    width: auto;
+    min-height: 0;
+    margin: 0;
+    padding: var(--odstep-xs) 10px;
+    font-size: 0.9rem;
+}
+
+a.przycisk {
+    color: #fff;
+    text-decoration: none;
+    background: var(--kolor-glowny);
+    border-radius: 4px;
+}
+
+button.niebezpieczny {
+    background: var(--kolor-blad);
+    border-color: var(--kolor-blad);
+}
+
+button.niebezpieczny:hover {
+    background: #8c1d17;
+    border-color: #8c1d17;
+}
+
+.status {
+    display: inline-block;
+    padding: 2px var(--odstep-sm);
+    font-size: 0.85rem;
+    border-radius: 999px;
+    background: var(--kolor-tlo);
+    border: 1px solid var(--kolor-ramka);
+}
+
+.liczniki {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: var(--odstep-lg);
+    margin-bottom: var(--odstep-xl);
+}
+
+.licznik {
+    padding: var(--odstep-lg);
+    background: var(--kolor-powierzchni);
+    border: 1px solid var(--kolor-ramka);
+    border-radius: var(--promien);
+    box-shadow: var(--cien);
+}
+
+.licznik strong {
+    display: block;
+    font-size: 2rem;
+    line-height: 1.2;
+    color: var(--kolor-glowny);
+}
+
+.licznik span {
+    color: var(--kolor-tekst-pomocniczy);
+}
+
+/* filtry nad tabela: pola obok siebie zamiast jednej kolumny */
+form.filtry {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: var(--odstep-md);
+    align-items: end;
+    max-width: none;
+    margin-bottom: var(--odstep-lg);
+}
+
+form.filtry label {
+    margin: 0;
+}
+
+form.filtry button {
+    margin-top: 0;
+}
+
+.admin form.edycja {
+    margin-bottom: var(--odstep-xl);
 }
