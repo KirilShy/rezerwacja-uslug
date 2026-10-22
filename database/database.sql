@@ -79,6 +79,14 @@ CREATE TABLE rezerwacje (
     INDEX idx_uzytkownik (uzytkownik_id)
 );
 
+CREATE TABLE proby_logowania (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(100) NOT NULL,
+    adres_ip VARCHAR(45) NOT NULL,
+    data_proby TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_email_data (email, data_proby)
+);
+
 -- Dane testowe (haslo dla wszystkich kont: haslo123)
 
 INSERT INTO uzytkownicy (imie, nazwisko, email, haslo, telefon, rola) VALUES
