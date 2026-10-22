@@ -27,6 +27,18 @@ function przekieruj(string $adres): void
     exit;
 }
 
+const STATUSY_REZERWACJI = [
+    'oczekujaca' => 'Oczekujaca',
+    'potwierdzona' => 'Potwierdzona',
+    'zrealizowana' => 'Zrealizowana',
+    'anulowana' => 'Anulowana',
+];
+
+function nazwaStatusu(string $status): string
+{
+    return STATUSY_REZERWACJI[$status] ?? $status;
+}
+
 function naglowekAdmina(string $tytul): void
 {
     $linki = [
