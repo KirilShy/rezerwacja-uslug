@@ -33,6 +33,28 @@ if ($akcja === 'przelacz') {
     przekieruj('admin_uslugi.php');
 }
 
+if ($akcja === 'usun') {
+    $id = liczba($_POST['id'] ?? '');
+
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM rezerwacje WHERE usluga_id = ?');
+    $stmt->execute([$id]);
+
+    // rezerwacje musza dalej wskazywac na swoja usluge, wiec taka usluge mozna tylko dezaktywowac
+    if ($stmt->fetchColumn() > 0) {
+        ustawKomunikat('blad', 'Tej uslugi nie mozna usunac, bo ma rezerwacje. Mozesz ja dezaktywowac.');
+    } else {
+        $stmt = $pdo->prepare('DELETE FROM uslugi WHERE id = ?');
+        $stmt->execute([$id]);
+
+        ustawKomunikat(
+            $stmt->rowCount() ? 'sukces' : 'blad',
+            $stmt->rowCount() ? 'Usunieto usluge.' : 'Nie znaleziono uslugi.'
+        );
+    }
+
+    przekieruj('admin_uslugi.php');
+}
+
 if ($akcja === 'dodaj' || $akcja === 'zapisz') {
     $nazwa = postTekst('nazwa');
     $opis = postTekst('opis');
@@ -119,6 +141,14 @@ naglowekAdmina('Uslugi');
                             <input type="hidden" name="id" value="<?= (int) $u['id'] ?>">
                             <button type="submit" class="maly"><?= $u['aktywna'] ? 'Dezaktywuj' : 'Aktywuj' ?></button>
                         </form>
+                        <?php if (!$u['liczba_rezerwacji']): ?>
+                            <form method="post" class="w-linii" data-potwierdz="<?= e('Usunac usluge ' . $u['nazwa'] . '?') ?>">
+                                <?= csrfPole() ?>
+                                <input type="hidden" name="akcja" value="usun">
+                                <input type="hidden" name="id" value="<?= (int) $u['id'] ?>">
+                                <button type="submit" class="maly niebezpieczny">Usun</button>
+                            </form>
+                        <?php endif; ?>
                     </div>
                 </td>
             </tr>
