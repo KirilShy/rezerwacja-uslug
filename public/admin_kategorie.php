@@ -19,6 +19,28 @@ if ($edytowanaId > 0) {
     }
 }
 
+if ($akcja === 'usun') {
+    $id = liczba($_POST['id'] ?? '');
+
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM uslugi WHERE kategoria_id = ?');
+    $stmt->execute([$id]);
+
+    // usuniecie kategorii z uslugami zostawiloby uslugi bez kategorii, wiec blokujemy je
+    if ($stmt->fetchColumn() > 0) {
+        ustawKomunikat('blad', 'Nie mozna usunac kategorii, ktora ma uslugi. Najpierw przenies lub usun jej uslugi.');
+    } else {
+        $stmt = $pdo->prepare('DELETE FROM kategorie_uslug WHERE id = ?');
+        $stmt->execute([$id]);
+
+        ustawKomunikat(
+            $stmt->rowCount() ? 'sukces' : 'blad',
+            $stmt->rowCount() ? 'Usunieto kategorie.' : 'Nie znaleziono kategorii.'
+        );
+    }
+
+    przekieruj('admin_kategorie.php');
+}
+
 if ($akcja === 'dodaj' || $akcja === 'zapisz') {
     $nazwa = postTekst('nazwa');
     $opis = postTekst('opis');
@@ -77,8 +99,16 @@ naglowekAdmina('Kategorie uslug');
                 <td><?= e($k['nazwa']) ?></td>
                 <td><?= e($k['opis']) ?></td>
                 <td><?= (int) $k['liczba_uslug'] ?></td>
-                <td class="akcje">
+                <td>
+                    <div class="akcje">
                     <a class="przycisk" href="admin_kategorie.php?edytuj=<?= (int) $k['id'] ?>">Edytuj</a>
+                    <form method="post" class="w-linii" data-potwierdz="<?= e('Usunac kategorie ' . $k['nazwa'] . '?') ?>">
+                        <?= csrfPole() ?>
+                        <input type="hidden" name="akcja" value="usun">
+                        <input type="hidden" name="id" value="<?= (int) $k['id'] ?>">
+                        <button type="submit" class="maly niebezpieczny">Usun</button>
+                    </form>
+                    </div>
                 </td>
             </tr>
         <?php endforeach; ?>
