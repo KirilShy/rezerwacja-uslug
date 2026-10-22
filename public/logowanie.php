@@ -38,6 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $haslo === ''
     ) {
         $blad = 'Podaj poprawny adres email i hasło.';
+    } elseif (zaDuzoProb($pdo, $email)) {
+        $blad = 'Za duzo nieudanych prob logowania. Sprobuj ponownie za 15 minut.';
     } else {
         $stmt = $pdo->prepare(
             'SELECT id, imie, email, haslo, rola, aktywny
@@ -53,10 +55,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             !$uzytkownik ||
             !password_verify($haslo, $uzytkownik['haslo'])
         ) {
+            $stmt = $pdo->prepare('INSERT INTO proby_logowania (email, adres_ip) VALUES (?, ?)');
+            $stmt->execute([$email, $_SERVER['REMOTE_ADDR'] ?? '']);
+
             $blad = 'Niepoprawny email lub hasło.';
         } elseif (!(bool) $uzytkownik['aktywny']) {
             $blad = 'To konto zostało dezaktywowane.';
         } else {
+            $stmt = $pdo->prepare('DELETE FROM proby_logowania WHERE email = ?');
+            $stmt->execute([$email]);
+
             // Zakończenie starej sesji i utworzenie nowego identyfikatora
             // powinno być obsługiwane przez funkcję logowania.
             zalogujUzytkownika(
@@ -72,6 +80,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
     }
+}
+
+// 5 nieudanych prob na ten sam email w ciagu 15 minut blokuje logowanie
+function zaDuzoProb(PDO $pdo, string $email): bool
+{
+    $stmt = $pdo->prepare(
+        'SELECT COUNT(*) FROM proby_logowania WHERE email = ? AND data_proby > NOW() - INTERVAL 15 MINUTE'
+    );
+    $stmt->execute([$email]);
+
+    return (int) $stmt->fetchColumn() >= 5;
 }
 
 // Kodowanie danych przed umieszczeniem ich w HTML.

@@ -67,4 +67,11 @@ erDiagram
         time godzina_do
         enum status
     }
+
+    proby_logowania {
+        int id PK
+        varchar email
+        varchar adres_ip
+        timestamp data_proby
+    }
 ```
