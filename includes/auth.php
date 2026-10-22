@@ -88,9 +88,9 @@ function wymagajLogowania(): void
         exit;
     }
 
-    require_once __DIR__ . '/../config/database.php';
-
     global $pdo;
+
+    require_once __DIR__ . '/../config/database.php';
 
     $stmt = $pdo->prepare(
         'SELECT aktywny, rola, imie
