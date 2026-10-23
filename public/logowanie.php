@@ -5,41 +5,45 @@ declare(strict_types=1);
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 
-// Przekierowanie zalogowanego użytkownika do odpowiedniego panelu.
 if (zalogowany()) {
     header('Location: ' . adresPanelu($_SESSION['user_rola']));
     exit;
 }
 
-// Inicjalizacja sesyjnego tokenu CSRF.
-if (empty($_SESSION['csrf_token'])) {
+if (
+    !isset($_SESSION['csrf_token']) ||
+    !is_string($_SESSION['csrf_token']) ||
+    $_SESSION['csrf_token'] === ''
+) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
 $blad = '';
 $email = '';
-$haslo = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = trim($_POST['email'] ?? '');
-    $haslo = $_POST['haslo'] ?? '';
-    $token = $_POST['csrf_token'] ?? '';
+    $emailPost = $_POST['email'] ?? null;
+    $haslo = $_POST['haslo'] ?? null;
+    $token = $_POST['csrf_token'] ?? null;
 
-    // Weryfikacja tokenu CSRF.
+    $email = is_string($emailPost) ? trim($emailPost) : '';
+
     if (
         !is_string($token) ||
         !hash_equals($_SESSION['csrf_token'], $token)
     ) {
         $blad = 'Sesja formularza wygasła. Odśwież stronę i spróbuj ponownie.';
     } elseif (
-        !is_string($email) ||
-        !filter_var($email, FILTER_VALIDATE_EMAIL) ||
+        !is_string($emailPost) ||
+        $email === '' ||
+        strlen($email) > 254 ||
+        filter_var($email, FILTER_VALIDATE_EMAIL) === false ||
         !is_string($haslo) ||
         $haslo === ''
     ) {
         $blad = 'Podaj poprawny adres email i hasło.';
     } elseif (zaDuzoProb($pdo, $email)) {
-        $blad = 'Za duzo nieudanych prob logowania. Sprobuj ponownie za 15 minut.';
+        $blad = 'Zbyt wiele nieudanych prób logowania. Spróbuj ponownie za 15 minut.';
     } else {
         $stmt = $pdo->prepare(
             'SELECT id, imie, email, haslo, rola, aktywny
@@ -53,27 +57,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (
             !$uzytkownik ||
-            !password_verify($haslo, $uzytkownik['haslo'])
+            !password_verify($haslo, (string) $uzytkownik['haslo'])
         ) {
-            $stmt = $pdo->prepare('INSERT INTO proby_logowania (email, adres_ip) VALUES (?, ?)');
-            $stmt->execute([$email, $_SERVER['REMOTE_ADDR'] ?? '']);
+            zarejestrujProbe($pdo, $email);
 
             $blad = 'Niepoprawny email lub hasło.';
         } elseif (!(bool) $uzytkownik['aktywny']) {
             $blad = 'To konto zostało dezaktywowane.';
         } else {
-            $stmt = $pdo->prepare('DELETE FROM proby_logowania WHERE email = ?');
+            $stmt = $pdo->prepare(
+                'DELETE FROM proby_logowania WHERE email = ?'
+            );
             $stmt->execute([$email]);
 
-            // Zakończenie starej sesji i utworzenie nowego identyfikatora
-            // powinno być obsługiwane przez funkcję logowania.
             zalogujUzytkownika(
                 (int) $uzytkownik['id'],
-                $uzytkownik['imie'],
-                $uzytkownik['rola']
+                (string) $uzytkownik['imie'],
+                (string) $uzytkownik['rola']
             );
 
-            // Odświeżenie tokenu formularza po udanym logowaniu.
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
             header('Location: ' . adresPanelu($uzytkownik['rola']));
@@ -82,18 +84,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// 5 nieudanych prob na ten sam email w ciagu 15 minut blokuje logowanie
+/**
+ * Sprawdza limit nieudanych prób logowania w ciągu 15 minut.
+ */
 function zaDuzoProb(PDO $pdo, string $email): bool
 {
     $stmt = $pdo->prepare(
-        'SELECT COUNT(*) FROM proby_logowania WHERE email = ? AND data_proby > NOW() - INTERVAL 15 MINUTE'
+        'SELECT COUNT(*)
+         FROM proby_logowania
+         WHERE email = ?
+           AND data_proby > NOW() - INTERVAL 15 MINUTE'
     );
+
     $stmt->execute([$email]);
 
     return (int) $stmt->fetchColumn() >= 5;
 }
 
-// Kodowanie danych przed umieszczeniem ich w HTML.
+/**
+ * Zapisuje nieudaną próbę logowania.
+ */
+function zarejestrujProbe(PDO $pdo, string $email): void
+{
+    $stmt = $pdo->prepare(
+        'INSERT INTO proby_logowania (email, adres_ip)
+         VALUES (?, ?)'
+    );
+
+    $stmt->execute([
+        $email,
+        $_SERVER['REMOTE_ADDR'] ?? ''
+    ]);
+}
+
+/**
+ * Bezpiecznie koduje tekst wyświetlany w HTML.
+ */
 function e(?string $wartosc): string
 {
     return htmlspecialchars(
@@ -113,7 +139,6 @@ function e(?string $wartosc): string
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-
     <main>
         <h1>Logowanie</h1>
 
@@ -135,7 +160,7 @@ function e(?string $wartosc): string
                 type="email"
                 id="email"
                 name="email"
-                value="<?= e(is_string($email) ? $email : '') ?>"
+                value="<?= e($email) ?>"
                 autocomplete="username"
                 maxlength="254"
                 required
@@ -159,6 +184,5 @@ function e(?string $wartosc): string
             <a href="rejestracja.php">Zarejestruj się</a>
         </p>
     </main>
-
 </body>
 </html>
