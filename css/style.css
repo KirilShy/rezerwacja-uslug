@@ -292,21 +292,26 @@ form + p {
 
 /* ===== panel administratora ===== */
 
-body.admin {
+body.admin,
+body.panel {
     --szerokosc-tresci: 1100px;
 }
 
-.admin main {
+.admin main,
+.panel main {
     max-width: var(--szerokosc-tresci);
     margin: 0 auto;
 }
 
 .admin main > .blad,
-.admin main > .sukces {
+.admin main > .sukces,
+.panel main > .blad,
+.panel main > .sukces {
     max-width: none;
 }
 
-.admin nav a[aria-current="page"] {
+.admin nav a[aria-current="page"],
+.panel nav a[aria-current="page"] {
     font-weight: 700;
     text-decoration: none;
 }
@@ -451,6 +456,7 @@ form.filtry button {
     margin-top: 0;
 }
 
-.admin form.edycja {
+.admin form.edycja,
+.panel form.edycja {
     margin-bottom: var(--odstep-xl);
 }
