@@ -79,6 +79,18 @@ CREATE TABLE rezerwacje (
     INDEX idx_uzytkownik (uzytkownik_id)
 );
 
+CREATE TABLE historia_statusow (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    rezerwacja_id INT NOT NULL,
+    status_przed ENUM('oczekujaca', 'potwierdzona', 'zrealizowana', 'anulowana') NULL COMMENT 'NULL przy utworzeniu rezerwacji',
+    status_po ENUM('oczekujaca', 'potwierdzona', 'zrealizowana', 'anulowana') NOT NULL,
+    zmienil_id INT NULL,
+    data_zmiany TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (rezerwacja_id) REFERENCES rezerwacje(id) ON DELETE CASCADE,
+    FOREIGN KEY (zmienil_id) REFERENCES uzytkownicy(id) ON DELETE SET NULL,
+    INDEX idx_rezerwacja (rezerwacja_id, data_zmiany)
+);
+
 CREATE TABLE proby_logowania (
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(100) NOT NULL,

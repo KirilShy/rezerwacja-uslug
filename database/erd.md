@@ -10,6 +10,8 @@ erDiagram
     uslugi ||--o{ pracownicy_uslugi : "wykonywana przez"
     uslugi ||--o{ rezerwacje : "dotyczy"
     kategorie_uslug ||--o{ uslugi : "zawiera"
+    rezerwacje ||--o{ historia_statusow : "ma historie"
+    uzytkownicy ||--o{ historia_statusow : "zmienia"
 
     uzytkownicy {
         int id PK
@@ -73,5 +75,14 @@ erDiagram
         varchar email
         varchar adres_ip
         timestamp data_proby
+    }
+
+    historia_statusow {
+        int id PK
+        int rezerwacja_id FK
+        enum status_przed
+        enum status_po
+        int zmienil_id FK
+        timestamp data_zmiany
     }
 ```

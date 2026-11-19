@@ -1,22 +1,23 @@
 <?php
 require __DIR__ . '/../includes/wspolne.php';
+require __DIR__ . '/../includes/statusy.php';
 
 chronStrone('klient');
 
 if (postTekst('akcja') === 'anuluj') {
-    // warunki w samym UPDATE: wlasna rezerwacja, jeszcze aktywna i w przyszlosci,
+    // warunek: wlasna rezerwacja, jeszcze aktywna i w przyszlosci,
     // wiec podmiana id w formularzu na cudza rezerwacje niczego nie zmieni
-    $stmt = $pdo->prepare(
-        "UPDATE rezerwacje SET status = 'anulowana'
-         WHERE id = ? AND uzytkownik_id = ?
-           AND status IN ('oczekujaca', 'potwierdzona')
-           AND TIMESTAMP(data_rezerwacji, godzina_od) > NOW()"
+    $anulowano = zmienStatus(
+        $pdo,
+        liczba($_POST['id'] ?? ''),
+        'anulowana',
+        "uzytkownik_id = ? AND status IN ('oczekujaca', 'potwierdzona') AND TIMESTAMP(data_rezerwacji, godzina_od) > NOW()",
+        [$_SESSION['user_id']]
     );
-    $stmt->execute([liczba($_POST['id'] ?? ''), $_SESSION['user_id']]);
 
     ustawKomunikat(
-        $stmt->rowCount() ? 'sukces' : 'blad',
-        $stmt->rowCount() ? 'Rezerwacja zostala anulowana.' : 'Tej rezerwacji nie mozna anulowac.'
+        $anulowano ? 'sukces' : 'blad',
+        $anulowano ? 'Rezerwacja zostala anulowana.' : 'Tej rezerwacji nie mozna anulowac.'
     );
     przekieruj('panel_klienta.php');
 }

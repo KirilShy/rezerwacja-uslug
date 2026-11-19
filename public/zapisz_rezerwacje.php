@@ -1,6 +1,7 @@
 <?php
 require __DIR__ . '/../includes/wspolne.php';
 require __DIR__ . '/../includes/terminy.php';
+require __DIR__ . '/../includes/statusy.php';
 
 chronStrone('klient');
 
@@ -56,6 +57,7 @@ $stmt->execute([
     czasZMinut(minuty($godzina) + (int) $usluga['czas_trwania']),
     $komentarz !== '' ? $komentarz : null,
 ]);
+zapiszHistorie($pdo, (int) $pdo->lastInsertId(), null, 'oczekujaca');
 
 $pdo->commit();
 
