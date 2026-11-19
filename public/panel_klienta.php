@@ -3,6 +3,24 @@ require __DIR__ . '/../includes/wspolne.php';
 
 chronStrone('klient');
 
+if (postTekst('akcja') === 'anuluj') {
+    // warunki w samym UPDATE: wlasna rezerwacja, jeszcze aktywna i w przyszlosci,
+    // wiec podmiana id w formularzu na cudza rezerwacje niczego nie zmieni
+    $stmt = $pdo->prepare(
+        "UPDATE rezerwacje SET status = 'anulowana'
+         WHERE id = ? AND uzytkownik_id = ?
+           AND status IN ('oczekujaca', 'potwierdzona')
+           AND TIMESTAMP(data_rezerwacji, godzina_od) > NOW()"
+    );
+    $stmt->execute([liczba($_POST['id'] ?? ''), $_SESSION['user_id']]);
+
+    ustawKomunikat(
+        $stmt->rowCount() ? 'sukces' : 'blad',
+        $stmt->rowCount() ? 'Rezerwacja zostala anulowana.' : 'Tej rezerwacji nie mozna anulowac.'
+    );
+    przekieruj('panel_klienta.php');
+}
+
 // klient widzi wylacznie rezerwacje ze swoim id z sesji
 $stmt = $pdo->prepare(
     "SELECT r.id, r.data_rezerwacji, r.godzina_od, r.godzina_do, r.status, r.komentarz,
@@ -40,6 +58,9 @@ function tabelaRezerwacji(array $lista, bool $przyszle): void
                 <th>Godzina</th>
                 <th>Cena</th>
                 <th>Status</th>
+                <?php if ($przyszle): ?>
+                    <th></th>
+                <?php endif; ?>
             </tr>
             <?php foreach ($lista as $r): ?>
                 <tr>
@@ -49,6 +70,16 @@ function tabelaRezerwacji(array $lista, bool $przyszle): void
                     <td><?= godzina($r['godzina_od']) ?>-<?= godzina($r['godzina_do']) ?></td>
                     <td><?= cena($r['cena']) ?></td>
                     <td><span class="status status-<?= e($r['status']) ?>"><?= e(nazwaStatusu($r['status'])) ?></span></td>
+                    <?php if ($przyszle): ?>
+                        <td>
+                            <form method="post" class="w-linii" data-potwierdz="<?= e('Anulowac rezerwacje ' . $r['usluga'] . ' z ' . data($r['data_rezerwacji']) . '?') ?>">
+                                <?= csrfPole() ?>
+                                <input type="hidden" name="akcja" value="anuluj">
+                                <input type="hidden" name="id" value="<?= (int) $r['id'] ?>">
+                                <button type="submit" class="maly niebezpieczny">Anuluj</button>
+                            </form>
+                        </td>
+                    <?php endif; ?>
                 </tr>
             <?php endforeach; ?>
         </table>
