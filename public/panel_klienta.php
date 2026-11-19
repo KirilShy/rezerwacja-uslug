@@ -7,7 +7,7 @@ chronStrone('klient');
 if (postTekst('akcja') === 'anuluj') {
     // warunek: wlasna rezerwacja, jeszcze aktywna i w przyszlosci,
     // wiec podmiana id w formularzu na cudza rezerwacje niczego nie zmieni
-    $anulowano = zmienStatus(
+    $blad = zmienStatus(
         $pdo,
         liczba($_POST['id'] ?? ''),
         'anulowana',
@@ -16,8 +16,8 @@ if (postTekst('akcja') === 'anuluj') {
     );
 
     ustawKomunikat(
-        $anulowano ? 'sukces' : 'blad',
-        $anulowano ? 'Rezerwacja zostala anulowana.' : 'Tej rezerwacji nie mozna anulowac.'
+        $blad ? 'blad' : 'sukces',
+        $blad ? 'Tej rezerwacji nie mozna anulowac.' : 'Rezerwacja zostala anulowana.'
     );
     przekieruj('panel_klienta.php');
 }
