@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/csrf.php';
 require __DIR__ . '/../config/database.php';
 
 if (zalogowany()) {
@@ -10,6 +11,8 @@ if (zalogowany()) {
 $blad = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    sprawdzCsrf();
+
     $imie = trim($_POST['imie'] ?? '');
     $nazwisko = trim($_POST['nazwisko'] ?? '');
     $email = trim($_POST['email'] ?? '');
@@ -63,6 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php endif; ?>
 
     <form method="post">
+        <?= csrfPole() ?>
         <label>Imie: <input type="text" name="imie" value="<?= htmlspecialchars($_POST['imie'] ?? '') ?>"></label><br>
         <label>Nazwisko: <input type="text" name="nazwisko" value="<?= htmlspecialchars($_POST['nazwisko'] ?? '') ?>"></label><br>
         <label>Email: <input type="email" name="email" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"></label><br>

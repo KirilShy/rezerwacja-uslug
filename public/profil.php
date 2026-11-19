@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/csrf.php';
 require_once __DIR__ . '/../config/database.php';
 
 wymagajLogowania();
@@ -34,6 +35,8 @@ $nazwisko = $uzytkownik['nazwisko'];
 $telefon  = (string) $uzytkownik['telefon'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    sprawdzCsrf();
+
     $imie     = trim((string) ($_POST['imie'] ?? ''));
     $nazwisko = trim((string) ($_POST['nazwisko'] ?? ''));
     $telefon  = trim((string) ($_POST['telefon'] ?? ''));
@@ -82,6 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php endif; ?>
 
     <form method="post">
+        <?= csrfPole() ?>
         <label>Email:
             <input type="email" value="<?= e($uzytkownik['email']) ?>" disabled>
         </label><br>

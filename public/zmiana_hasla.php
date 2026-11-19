@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/csrf.php';
 require __DIR__ . '/../config/database.php';
 wymagajLogowania();
 
@@ -7,6 +8,8 @@ $blad = '';
 $sukces = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    sprawdzCsrf();
+
     $stare = $_POST['stare_haslo'] ?? '';
     $nowe = $_POST['nowe_haslo'] ?? '';
     $nowe2 = $_POST['nowe_haslo2'] ?? '';
@@ -59,6 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php endif; ?>
 
     <form method="post">
+        <?= csrfPole() ?>
         <label>Obecne haslo: <input type="password" name="stare_haslo"></label>
         <label>Nowe haslo: <input type="password" name="nowe_haslo"></label>
         <label>Powtorz nowe haslo: <input type="password" name="nowe_haslo2"></label>
