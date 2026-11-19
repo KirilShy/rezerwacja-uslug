@@ -460,3 +460,82 @@ form.filtry button {
 .panel form.edycja {
     margin-bottom: var(--odstep-xl);
 }
+
+
+/* ===== oferta i rezerwacja ===== */
+
+.filtr-kategorii {
+    max-width: var(--szerokosc-tresci);
+    margin: 0 auto var(--odstep-lg);
+}
+
+.filtr-kategorii a[aria-current="page"],
+.kroki .aktywny {
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.karta {
+    margin-bottom: var(--odstep-xl);
+    padding: var(--odstep-lg) var(--odstep-xl);
+    background: var(--kolor-powierzchni);
+    border: 1px solid var(--kolor-ramka);
+    border-radius: var(--promien);
+    box-shadow: var(--cien);
+}
+
+.karta dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: var(--odstep-xs) var(--odstep-lg);
+    margin: 0;
+}
+
+.karta dt {
+    font-weight: 700;
+}
+
+.karta dd {
+    margin: 0;
+}
+
+.kroki {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--odstep-sm);
+    padding: 0;
+    margin: 0 0 var(--odstep-lg);
+    list-style: none;
+    color: var(--kolor-tekst-pomocniczy);
+}
+
+.kroki li + li::before {
+    content: "\2192  ";
+}
+
+.wybor {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--odstep-sm);
+    margin-bottom: var(--odstep-xl);
+}
+
+.wybor a {
+    padding: var(--odstep-sm) var(--odstep-md);
+    text-decoration: none;
+    background: var(--kolor-powierzchni);
+    border: 1px solid var(--kolor-ramka);
+    border-radius: 4px;
+}
+
+.wybor a:hover,
+.wybor a[aria-current="page"] {
+    color: #fff;
+    background: var(--kolor-glowny);
+    border-color: var(--kolor-glowny);
+}
+
+.status-oczekujaca { background: #fff6e0; border-color: #e0b44a; }
+.status-potwierdzona { background: var(--kolor-sukces-tlo); border-color: var(--kolor-sukces); }
+.status-zrealizowana { background: #e7eef7; border-color: var(--kolor-glowny); }
+.status-anulowana { background: var(--kolor-blad-tlo); border-color: var(--kolor-blad); }
