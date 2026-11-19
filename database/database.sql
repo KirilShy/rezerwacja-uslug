@@ -1,3 +1,5 @@
+-- tworzy baze od nowa: wczesniejsze dane w rezerwacja_uslug zostana usuniete
+DROP DATABASE IF EXISTS rezerwacja_uslug;
 CREATE DATABASE IF NOT EXISTS rezerwacja_uslug CHARACTER SET utf8mb4;
 USE rezerwacja_uslug;
 
@@ -105,7 +107,8 @@ INSERT INTO uzytkownicy (imie, nazwisko, email, haslo, telefon, rola) VALUES
 ('Anna', 'Kowalska', 'admin@serwis.pl', '$2y$12$E.BY5eN5wUDxkKujGJcu6eP8m4kaExo4UwlXwyNTwYEGg5ZE2AuES', '600100100', 'administrator'),
 ('Jan', 'Nowak', 'jan.nowak@serwis.pl', '$2y$12$E.BY5eN5wUDxkKujGJcu6eP8m4kaExo4UwlXwyNTwYEGg5ZE2AuES', '600200200', 'pracownik'),
 ('Piotr', 'Zielinski', 'piotr.zielinski@serwis.pl', '$2y$12$E.BY5eN5wUDxkKujGJcu6eP8m4kaExo4UwlXwyNTwYEGg5ZE2AuES', '600300300', 'pracownik'),
-('Ewa', 'Wisniewska', 'ewa@klient.pl', '$2y$12$E.BY5eN5wUDxkKujGJcu6eP8m4kaExo4UwlXwyNTwYEGg5ZE2AuES', '600400400', 'klient');
+('Ewa', 'Wisniewska', 'ewa@klient.pl', '$2y$12$E.BY5eN5wUDxkKujGJcu6eP8m4kaExo4UwlXwyNTwYEGg5ZE2AuES', '600400400', 'klient'),
+('Tomasz', 'Wojcik', 'tomasz@klient.pl', '$2y$12$E.BY5eN5wUDxkKujGJcu6eP8m4kaExo4UwlXwyNTwYEGg5ZE2AuES', '600500500', 'klient');
 
 INSERT INTO pracownicy (uzytkownik_id, opis) VALUES
 (2, 'Naprawa laptopow i komputerow stacjonarnych'),
@@ -113,21 +116,43 @@ INSERT INTO pracownicy (uzytkownik_id, opis) VALUES
 
 INSERT INTO kategorie_uslug (nazwa, opis) VALUES
 ('Naprawa sprzetu', 'Diagnostyka i naprawa komputerow oraz laptopow'),
-('Oprogramowanie', 'Instalacja i konfiguracja oprogramowania');
+('Oprogramowanie', 'Instalacja i konfiguracja oprogramowania'),
+('Sieci', 'Konfiguracja routerow i sieci domowych');
 
 INSERT INTO uslugi (kategoria_id, nazwa, opis, czas_trwania, cena) VALUES
 (1, 'Diagnostyka komputera', 'Sprawdzenie sprzetu i wykrycie usterki', 30, 50.00),
 (1, 'Wymiana dysku SSD', 'Wymiana dysku i migracja systemu', 60, 150.00),
-(2, 'Instalacja systemu Windows', 'Czysta instalacja systemu operacyjnego', 90, 120.00);
+(2, 'Instalacja systemu Windows', 'Czysta instalacja systemu operacyjnego', 90, 120.00),
+(1, 'Czyszczenie laptopa', 'Czyszczenie ukladu chlodzenia i wymiana pasty', 45, 90.00),
+(3, 'Konfiguracja routera', 'Ustawienie sieci WiFi i zabezpieczen', 60, 100.00);
 
 INSERT INTO pracownicy_uslugi (pracownik_id, usluga_id) VALUES
-(1, 1), (1, 2), (2, 1), (2, 3);
+(1, 1), (1, 2), (1, 4), (2, 1), (2, 3), (2, 5);
 
 INSERT INTO dostepnosc_pracownikow (pracownik_id, dzien_tygodnia, godzina_od, godzina_do) VALUES
 (1, 1, '09:00:00', '17:00:00'),
 (1, 2, '09:00:00', '17:00:00'),
+(1, 3, '09:00:00', '17:00:00'),
+(1, 4, '09:00:00', '17:00:00'),
+(1, 5, '09:00:00', '15:00:00'),
 (2, 1, '10:00:00', '18:00:00'),
-(2, 3, '10:00:00', '18:00:00');
+(2, 3, '10:00:00', '18:00:00'),
+(2, 5, '10:00:00', '18:00:00'),
+(2, 6, '09:00:00', '13:00:00');
 
-INSERT INTO rezerwacje (uzytkownik_id, pracownik_id, usluga_id, data_rezerwacji, godzina_od, godzina_do, status) VALUES
-(4, 1, 1, '2026-09-15', '10:00:00', '10:30:00', 'potwierdzona');
+-- daty liczone od dnia importu, zeby zawsze byly wizyty dzisiejsze, przyszle i zakonczone
+INSERT INTO rezerwacje (uzytkownik_id, pracownik_id, usluga_id, data_rezerwacji, godzina_od, godzina_do, status, komentarz) VALUES
+(4, 1, 1, CURDATE() - INTERVAL 14 DAY, '10:00:00', '10:30:00', 'zrealizowana', 'Komputer sie przegrzewa'),
+(5, 2, 3, CURDATE() - INTERVAL 7 DAY, '12:00:00', '13:30:00', 'zrealizowana', NULL),
+(4, 2, 5, CURDATE() - INTERVAL 3 DAY, '11:00:00', '12:00:00', 'anulowana', NULL),
+(5, 1, 2, CURDATE(), '13:00:00', '14:00:00', 'potwierdzona', 'Odbior po wymianie dysku'),
+(4, 1, 2, CURDATE() + INTERVAL 7 DAY, '10:00:00', '11:00:00', 'oczekujaca', 'Laptop nie widzi dysku'),
+(5, 2, 1, CURDATE() + INTERVAL 7 DAY, '14:00:00', '14:30:00', 'potwierdzona', NULL);
+
+INSERT INTO historia_statusow (rezerwacja_id, status_przed, status_po, zmienil_id) VALUES
+(1, NULL, 'oczekujaca', 4), (1, 'oczekujaca', 'potwierdzona', 2), (1, 'potwierdzona', 'zrealizowana', 2),
+(2, NULL, 'oczekujaca', 5), (2, 'oczekujaca', 'zrealizowana', 3),
+(3, NULL, 'oczekujaca', 4), (3, 'oczekujaca', 'anulowana', 4),
+(4, NULL, 'oczekujaca', 5), (4, 'oczekujaca', 'potwierdzona', 1),
+(5, NULL, 'oczekujaca', 4),
+(6, NULL, 'oczekujaca', 5), (6, 'oczekujaca', 'potwierdzona', 3);
