@@ -539,3 +539,36 @@ form.filtry button {
 .status-potwierdzona { background: var(--kolor-sukces-tlo); border-color: var(--kolor-sukces); }
 .status-zrealizowana { background: #e7eef7; border-color: var(--kolor-glowny); }
 .status-anulowana { background: var(--kolor-blad-tlo); border-color: var(--kolor-blad); }
+
+/* ===== edycja pracownika ===== */
+
+label.pole-wyboru {
+    display: flex;
+    align-items: center;
+    gap: var(--odstep-sm);
+    font-weight: 400;
+}
+
+label.pole-wyboru input {
+    width: auto;
+    min-height: 0;
+    margin: 0;
+}
+
+.godziny-dnia {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--odstep-sm);
+    align-items: center;
+    margin-bottom: var(--odstep-sm);
+}
+
+.godziny-dnia input {
+    margin: 0;
+}
+
+.stronicowanie {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--odstep-sm);
+}

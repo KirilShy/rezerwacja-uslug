@@ -5,6 +5,110 @@ require __DIR__ . '/../includes/terminy.php';
 $blad = '';
 $akcja = $_SERVER['REQUEST_METHOD'] === 'POST' ? postTekst('akcja') : '';
 
+// edytowany pracownik: z adresu (?edytuj=3) albo z wyslanego formularza
+$edytowanyId = in_array($akcja, ['dane', 'uslugi', 'godziny'], true) ? liczba($_POST['id'] ?? '') : liczba($_GET['edytuj'] ?? '');
+$edytowany = null;
+
+if ($edytowanyId > 0) {
+    $stmt = $pdo->prepare(
+        'SELECT p.id, p.opis, p.uzytkownik_id, u.imie, u.nazwisko, u.email, u.telefon
+         FROM pracownicy p JOIN uzytkownicy u ON u.id = p.uzytkownik_id
+         WHERE p.id = ?'
+    );
+    $stmt->execute([$edytowanyId]);
+    $edytowany = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+
+    if (!$edytowany) {
+        ustawKomunikat('blad', 'Nie znaleziono pracownika.');
+        przekieruj('admin_pracownicy.php');
+    }
+}
+
+$powrot = 'admin_pracownicy.php?edytuj=' . $edytowanyId;
+
+if ($akcja === 'dane') {
+    $imie = postTekst('imie');
+    $nazwisko = postTekst('nazwisko');
+    $telefon = postTekst('telefon');
+    $opis = postTekst('opis');
+
+    if ($imie === '' || $nazwisko === '' || mb_strlen($imie) > 50 || mb_strlen($nazwisko) > 50) {
+        $blad = 'Imie i nazwisko sa wymagane (maksymalnie 50 znakow).';
+    } elseif ($telefon !== '' && !preg_match('/^[0-9 +-]{6,20}$/', $telefon)) {
+        $blad = 'Podaj poprawny numer telefonu.';
+    } elseif (mb_strlen($opis) > 1000) {
+        $blad = 'Opis moze miec maksymalnie 1000 znakow.';
+    } else {
+        $stmt = $pdo->prepare('UPDATE uzytkownicy SET imie = ?, nazwisko = ?, telefon = ? WHERE id = ?');
+        $stmt->execute([$imie, $nazwisko, $telefon, $edytowany['uzytkownik_id']]);
+        $stmt = $pdo->prepare('UPDATE pracownicy SET opis = ? WHERE id = ?');
+        $stmt->execute([$opis, $edytowanyId]);
+
+        ustawKomunikat('sukces', 'Zapisano dane pracownika.');
+        przekieruj($powrot);
+    }
+}
+
+if ($akcja === 'uslugi') {
+    $wybrane = is_array($_POST['uslugi'] ?? null) ? array_map('liczba', $_POST['uslugi']) : [];
+    $istniejace = $pdo->query('SELECT id FROM uslugi')->fetchAll(PDO::FETCH_COLUMN);
+    // zapisujemy tylko id uslug, ktore naprawde istnieja
+    $wybrane = array_intersect(array_unique($wybrane), $istniejace);
+
+    $pdo->beginTransaction();
+    $stmt = $pdo->prepare('DELETE FROM pracownicy_uslugi WHERE pracownik_id = ?');
+    $stmt->execute([$edytowanyId]);
+    $stmt = $pdo->prepare('INSERT INTO pracownicy_uslugi (pracownik_id, usluga_id) VALUES (?, ?)');
+    foreach ($wybrane as $uslugaId) {
+        $stmt->execute([$edytowanyId, $uslugaId]);
+    }
+    $pdo->commit();
+
+    ustawKomunikat('sukces', 'Zapisano uslugi pracownika (' . count($wybrane) . ').');
+    przekieruj($powrot);
+}
+
+if ($akcja === 'godziny') {
+    $godziny = [];
+
+    foreach (DNI_TYGODNIA as $nr => $nazwa) {
+        $od = is_string($_POST['od'][$nr] ?? null) ? $_POST['od'][$nr] : '';
+        $do = is_string($_POST['do'][$nr] ?? null) ? $_POST['do'][$nr] : '';
+
+        if ($od === '' && $do === '') {
+            continue;
+        }
+
+        if (!preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $od) || !preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $do)) {
+            $blad = $nazwa . ': podaj obie godziny w formacie GG:MM albo zostaw oba pola puste.';
+            break;
+        }
+
+        if (minuty($od) >= minuty($do)) {
+            $blad = $nazwa . ': koniec pracy musi byc pozniej niz poczatek.';
+            break;
+        }
+
+        $godziny[$nr] = [$od, $do];
+    }
+
+    if (!$blad) {
+        $pdo->beginTransaction();
+        $stmt = $pdo->prepare('DELETE FROM dostepnosc_pracownikow WHERE pracownik_id = ?');
+        $stmt->execute([$edytowanyId]);
+        $stmt = $pdo->prepare(
+            'INSERT INTO dostepnosc_pracownikow (pracownik_id, dzien_tygodnia, godzina_od, godzina_do) VALUES (?, ?, ?, ?)'
+        );
+        foreach ($godziny as $nr => [$od, $do]) {
+            $stmt->execute([$edytowanyId, $nr, $od, $do]);
+        }
+        $pdo->commit();
+
+        ustawKomunikat('sukces', 'Zapisano godziny pracy.');
+        przekieruj($powrot);
+    }
+}
+
 // nieaktywny pracownik znika z wyboru przy rezerwacji, ale jego wizyty zostaja
 if ($akcja === 'przelacz') {
     $stmt = $pdo->prepare('UPDATE pracownicy SET aktywny = NOT aktywny WHERE id = ?');
@@ -70,11 +174,75 @@ $pracownicy = $pdo->query(
      ORDER BY u.nazwisko, u.imie"
 )->fetchAll(PDO::FETCH_ASSOC);
 
-naglowekAdmina('Pracownicy');
+naglowekAdmina($edytowany ? 'Pracownik: ' . $edytowany['imie'] . ' ' . $edytowany['nazwisko'] : 'Pracownicy');
 ?>
 <?php if ($blad): ?>
     <p class="blad" role="alert"><?= e($blad) ?></p>
 <?php endif; ?>
+
+<?php if ($edytowany): ?>
+    <?php
+    $przypisane = array_column(
+        $pdo->query('SELECT usluga_id FROM pracownicy_uslugi WHERE pracownik_id = ' . (int) $edytowany['id'])->fetchAll(),
+        'usluga_id'
+    );
+    $uslugi = $pdo->query(
+        'SELECT u.id, u.nazwa, u.aktywna, k.nazwa AS kategoria
+         FROM uslugi u JOIN kategorie_uslug k ON k.id = u.kategoria_id
+         ORDER BY k.nazwa, u.nazwa'
+    )->fetchAll(PDO::FETCH_ASSOC);
+    $praca = array_column(dniPracy($pdo, (int) $edytowany['id']), null, 'dzien_tygodnia');
+    $dane = $akcja === 'dane' ? array_merge($edytowany, array_map('postTekst', ['imie' => 'imie', 'nazwisko' => 'nazwisko', 'telefon' => 'telefon', 'opis' => 'opis'])) : $edytowany;
+    ?>
+    <p><a href="admin_pracownicy.php">&larr; Wszyscy pracownicy</a></p>
+
+    <h2>Dane</h2>
+    <form method="post" class="edycja">
+        <?= csrfPole() ?>
+        <input type="hidden" name="akcja" value="dane">
+        <input type="hidden" name="id" value="<?= (int) $edytowany['id'] ?>">
+        <label>Email (login): <input type="email" value="<?= e($edytowany['email']) ?>" disabled></label>
+        <label>Imie: <input type="text" name="imie" maxlength="50" required value="<?= e($dane['imie']) ?>"></label>
+        <label>Nazwisko: <input type="text" name="nazwisko" maxlength="50" required value="<?= e($dane['nazwisko']) ?>"></label>
+        <label>Telefon: <input type="tel" name="telefon" maxlength="20" value="<?= e($dane['telefon']) ?>"></label>
+        <label>Opis: <textarea name="opis" maxlength="1000"><?= e($dane['opis']) ?></textarea></label>
+        <button type="submit">Zapisz dane</button>
+    </form>
+
+    <h2>Wykonywane uslugi</h2>
+    <form method="post" class="edycja">
+        <?= csrfPole() ?>
+        <input type="hidden" name="akcja" value="uslugi">
+        <input type="hidden" name="id" value="<?= (int) $edytowany['id'] ?>">
+        <?php foreach ($uslugi as $u): ?>
+            <label class="pole-wyboru">
+                <input type="checkbox" name="uslugi[]" value="<?= (int) $u['id'] ?>"<?= in_array($u['id'], $przypisane) ? ' checked' : '' ?>>
+                <?= e($u['nazwa']) ?> <small>(<?= e($u['kategoria']) ?><?= $u['aktywna'] ? '' : ', nieaktywna' ?>)</small>
+            </label>
+        <?php endforeach; ?>
+        <button type="submit">Zapisz uslugi</button>
+    </form>
+
+    <h2>Godziny pracy</h2>
+    <form method="post" class="edycja">
+        <?= csrfPole() ?>
+        <input type="hidden" name="akcja" value="godziny">
+        <input type="hidden" name="id" value="<?= (int) $edytowany['id'] ?>">
+        <p><small>Puste pola oznaczaja dzien wolny.</small></p>
+        <?php foreach (DNI_TYGODNIA as $nr => $nazwa): ?>
+            <?php
+            $od = $akcja === 'godziny' ? ($_POST['od'][$nr] ?? '') : godzina($praca[$nr]['godzina_od'] ?? '');
+            $do = $akcja === 'godziny' ? ($_POST['do'][$nr] ?? '') : godzina($praca[$nr]['godzina_do'] ?? '');
+            ?>
+            <div class="godziny-dnia">
+                <span><?= e($nazwa) ?></span>
+                <input type="time" name="od[<?= $nr ?>]" aria-label="<?= e($nazwa) ?> od" value="<?= e(is_string($od) ? $od : '') ?>">
+                <input type="time" name="do[<?= $nr ?>]" aria-label="<?= e($nazwa) ?> do" value="<?= e(is_string($do) ? $do : '') ?>">
+            </div>
+        <?php endforeach; ?>
+        <button type="submit">Zapisz godziny</button>
+    </form>
+<?php else: ?>
 
 <div class="tabela">
     <table>
@@ -130,5 +298,6 @@ naglowekAdmina('Pracownicy');
     <label>Opis (specjalizacja): <textarea name="opis" maxlength="1000"><?= e(postTekst('opis')) ?></textarea></label>
     <button type="submit">Dodaj</button>
 </form>
+<?php endif; ?>
 <?php
 stopkaAdmina();
