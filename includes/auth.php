@@ -2,26 +2,32 @@
 
 declare(strict_types=1);
 
-// nieobsluzony blad trafia do logu serwera, a uzytkownik widzi tylko ogolny komunikat
+require_once __DIR__ . '/../config/database.php';
+
+const ROLE_UZYTKOWNIKA = ['administrator', 'pracownik', 'klient'];
+
+const SPRAWDZANIE_CO = 0;
+
 set_exception_handler(function (Throwable $e): void {
     error_log((string) $e);
-    http_response_code(500);
+
+    if (!headers_sent()) {
+        http_response_code(500);
+        header('Content-Type: text/plain; charset=utf-8');
+    }
+
     echo 'Wystapil blad. Sprobuj ponownie pozniej.';
 });
 
-
 if (session_status() !== PHP_SESSION_ACTIVE) {
-    ini_set('session.use_strict_mode', '1');
-    ini_set('session.use_only_cookies', '1');
-
     session_start([
+        'use_strict_mode' => true,
+        'use_only_cookies' => true,
         'cookie_httponly' => true,
         'cookie_samesite' => 'Lax',
-        'cookie_secure' => !empty($_SERVER['HTTPS'])
-            && $_SERVER['HTTPS'] !== 'off',
+        'cookie_secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
     ]);
 }
-
 
 function zalogowany(): bool
 {
@@ -30,27 +36,16 @@ function zalogowany(): bool
         && $_SESSION['user_id'] > 0;
 }
 
-
-function zalogujUzytkownika(
-    int $id,
-    string $imie,
-    string $rola
-): void {
+function zalogujUzytkownika(int $id, string $imie, string $rola): void
+{
     if ($id <= 0) {
         throw new InvalidArgumentException('Nieprawidłowe ID użytkownika.');
     }
 
-    $dozwoloneRole = [
-        'administrator',
-        'pracownik',
-        'klient',
-    ];
-
-    if (!in_array($rola, $dozwoloneRole, true)) {
+    if (!in_array($rola, ROLE_UZYTKOWNIKA, true)) {
         throw new InvalidArgumentException('Nieprawidłowa rola użytkownika.');
     }
 
-    // Ochrona przed session fixation.
     if (!session_regenerate_id(true)) {
         throw new RuntimeException('Nie udało się odświeżyć sesji.');
     }
@@ -58,8 +53,8 @@ function zalogujUzytkownika(
     $_SESSION['user_id'] = $id;
     $_SESSION['user_imie'] = $imie;
     $_SESSION['user_rola'] = $rola;
+    $_SESSION['sprawdzono_o'] = time();
 }
-
 
 function wyczyscSesje(): void
 {
@@ -68,18 +63,14 @@ function wyczyscSesje(): void
     if (ini_get('session.use_cookies')) {
         $parametry = session_get_cookie_params();
 
-        setcookie(
-            session_name(),
-            '',
-            [
-                'expires' => time() - 42000,
-                'path' => $parametry['path'],
-                'domain' => $parametry['domain'],
-                'secure' => $parametry['secure'],
-                'httponly' => $parametry['httponly'],
-                'samesite' => $parametry['samesite'] ?? 'Lax',
-            ]
-        );
+        setcookie(session_name(), '', [
+            'expires' => time() - 42000,
+            'path' => $parametry['path'],
+            'domain' => $parametry['domain'],
+            'secure' => $parametry['secure'],
+            'httponly' => $parametry['httponly'],
+            'samesite' => $parametry['samesite'] ?? 'Lax',
+        ]);
     }
 
     if (session_status() === PHP_SESSION_ACTIVE) {
@@ -87,56 +78,59 @@ function wyczyscSesje(): void
     }
 }
 
+function przekierujDoLogowania(): void
+{
+    header('Location: logowanie.php');
+    exit;
+}
 
 function wymagajLogowania(): void
 {
+    static $sprawdzono = false;
+
+    if ($sprawdzono) {
+        return;
+    }
+
     if (!zalogowany()) {
-        header('Location: logowanie.php');
-        exit;
+        przekierujDoLogowania();
+    }
+
+    header('Cache-Control: no-store');
+
+    $teraz = time();
+
+    if (
+        SPRAWDZANIE_CO > 0
+        && $teraz - (int) ($_SESSION['sprawdzono_o'] ?? 0) < SPRAWDZANIE_CO
+    ) {
+        $sprawdzono = true;
+        return;
     }
 
     global $pdo;
 
-    require_once __DIR__ . '/../config/database.php';
-
     $stmt = $pdo->prepare(
-        'SELECT aktywny, rola, imie
-         FROM uzytkownicy
-         WHERE id = ?
-         LIMIT 1'
+        'SELECT aktywny, rola, imie FROM uzytkownicy WHERE id = ? LIMIT 1'
     );
-
     $stmt->execute([$_SESSION['user_id']]);
-    $uzytkownik = $stmt->fetch(PDO::FETCH_ASSOC);
+    $uzytkownik = $stmt->fetch();
 
     if (
-        !$uzytkownik ||
-        !(bool) $uzytkownik['aktywny']
+        !$uzytkownik
+        || !(bool) $uzytkownik['aktywny']
+        || !in_array($uzytkownik['rola'], ROLE_UZYTKOWNIKA, true)
     ) {
         wyczyscSesje();
-
-        header('Location: logowanie.php');
-        exit;
-    }
-
-
-    $dozwoloneRole = [
-        'administrator',
-        'pracownik',
-        'klient',
-    ];
-
-    if (!in_array($uzytkownik['rola'], $dozwoloneRole, true)) {
-        wyczyscSesje();
-
-        header('Location: logowanie.php');
-        exit;
+        przekierujDoLogowania();
     }
 
     $_SESSION['user_rola'] = $uzytkownik['rola'];
     $_SESSION['user_imie'] = $uzytkownik['imie'];
-}
+    $_SESSION['sprawdzono_o'] = $teraz;
 
+    $sprawdzono = true;
+}
 
 function wymagajRoli(string $rola): void
 {
