@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 const DNI_TYGODNIA = [
     1 => 'Poniedzialek',
     2 => 'Wtorek',
@@ -10,7 +12,6 @@ const DNI_TYGODNIA = [
     7 => 'Niedziela',
 ];
 
-// co ile minut pokazujemy mozliwe godziny rozpoczecia
 const KROK_MINUT = 15;
 
 function minuty(string $czas): int
@@ -25,7 +26,6 @@ function czasZMinut(int $minuty): string
     return sprintf('%02d:%02d', intdiv($minuty, 60), $minuty % 60);
 }
 
-// poprawna data w formacie RRRR-MM-DD albo null
 function poprawnaData(string $data): ?string
 {
     $d = DateTime::createFromFormat('!Y-m-d', $data);
@@ -43,10 +43,9 @@ function aktywnaUsluga(PDO $pdo, int $id): ?array
     );
     $stmt->execute([$id]);
 
-    return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    return $stmt->fetch() ?: null;
 }
 
-// aktywni pracownicy (z aktywnym kontem), ktorzy wykonuja dana usluge
 function pracownicyUslugi(PDO $pdo, int $uslugaId): array
 {
     $stmt = $pdo->prepare(
@@ -59,7 +58,23 @@ function pracownicyUslugi(PDO $pdo, int $uslugaId): array
     );
     $stmt->execute([$uslugaId]);
 
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $stmt->fetchAll();
+}
+
+function pracownikWykonujeUsluge(PDO $pdo, int $pracownikId, int $uslugaId): bool
+{
+    $stmt = $pdo->prepare(
+        'SELECT 1
+         FROM pracownicy_uslugi pu
+         JOIN pracownicy p ON p.id = pu.pracownik_id
+         JOIN uzytkownicy u ON u.id = p.uzytkownik_id
+         WHERE pu.usluga_id = ? AND pu.pracownik_id = ?
+           AND p.aktywny = 1 AND u.aktywny = 1
+         LIMIT 1'
+    );
+    $stmt->execute([$uslugaId, $pracownikId]);
+
+    return (bool) $stmt->fetchColumn();
 }
 
 function dniPracy(PDO $pdo, int $pracownikId): array
@@ -72,23 +87,27 @@ function dniPracy(PDO $pdo, int $pracownikId): array
     );
     $stmt->execute([$pracownikId]);
 
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $stmt->fetchAll();
 }
 
-// godziny pracy w dniu tygodnia, na ktory wypada data, albo null gdy pracownik nie pracuje
 function godzinyPracy(PDO $pdo, int $pracownikId, string $data): ?array
 {
+    $d = DateTimeImmutable::createFromFormat('!Y-m-d', $data);
+
+    if (!$d) {
+        return null;
+    }
+
     $stmt = $pdo->prepare(
         'SELECT godzina_od, godzina_do
          FROM dostepnosc_pracownikow
          WHERE pracownik_id = ? AND dzien_tygodnia = ?'
     );
-    $stmt->execute([$pracownikId, (int) date('N', strtotime($data))]);
+    $stmt->execute([$pracownikId, (int) $d->format('N')]);
 
-    return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    return $stmt->fetch() ?: null;
 }
 
-// zajete przedzialy pracownika w danym dniu; anulowana i zrealizowana rezerwacja terminu nie blokuje
 function zajeteTerminy(PDO $pdo, int $pracownikId, string $data): array
 {
     $stmt = $pdo->prepare(
@@ -99,11 +118,9 @@ function zajeteTerminy(PDO $pdo, int $pracownikId, string $data): array
     );
     $stmt->execute([$pracownikId, $data]);
 
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $stmt->fetchAll();
 }
 
-// dwie wizyty koliduja, gdy nowa zaczyna sie przed koncem istniejacej
-// i konczy sie po jej poczatku (10:00-11:00 blokuje 9:30-10:30, ale nie 9:00-10:00 ani 11:00-12:00)
 function koliduje(int $od, int $do, array $zajete): bool
 {
     foreach ($zajete as $z) {
@@ -115,9 +132,12 @@ function koliduje(int $od, int $do, array $zajete): bool
     return false;
 }
 
-// wszystkie godziny rozpoczecia, w ktorych usluga zmiesci sie w godzinach pracy i nie koliduje
 function wolneTerminy(PDO $pdo, int $pracownikId, string $data, int $czasTrwania): array
 {
+    if (!poprawnaData($data) || $data < date('Y-m-d')) {
+        return [];
+    }
+
     $praca = godzinyPracy($pdo, $pracownikId, $data);
 
     if (!$praca) {
@@ -126,9 +146,10 @@ function wolneTerminy(PDO $pdo, int $pracownikId, string $data, int $czasTrwania
 
     $zajete = zajeteTerminy($pdo, $pracownikId, $data);
     $teraz = $data === date('Y-m-d') ? minuty(date('H:i')) : -1;
+    $koniecPracy = minuty($praca['godzina_do']);
     $wolne = [];
 
-    for ($od = minuty($praca['godzina_od']); $od + $czasTrwania <= minuty($praca['godzina_do']); $od += KROK_MINUT) {
+    for ($od = minuty($praca['godzina_od']); $od + $czasTrwania <= $koniecPracy; $od += KROK_MINUT) {
         if ($od > $teraz && !koliduje($od, $od + $czasTrwania, $zajete)) {
             $wolne[] = czasZMinut($od);
         }
@@ -137,13 +158,8 @@ function wolneTerminy(PDO $pdo, int $pracownikId, string $data, int $czasTrwania
     return $wolne;
 }
 
-// pelne sprawdzenie terminu po stronie serwera; zwraca opis bledu albo null, gdy termin jest poprawny
 function bladTerminu(PDO $pdo, array $usluga, int $pracownikId, string $data, string $godzina): ?string
 {
-    if (!in_array($pracownikId, array_column(pracownicyUslugi($pdo, (int) $usluga['id']), 'id'))) {
-        return 'Wybrany pracownik nie wykonuje tej uslugi.';
-    }
-
     if (!poprawnaData($data) || !preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $godzina)) {
         return 'Niepoprawna data lub godzina.';
     }
@@ -152,12 +168,20 @@ function bladTerminu(PDO $pdo, array $usluga, int $pracownikId, string $data, st
         return 'Nie mozna zarezerwowac terminu w przeszlosci.';
     }
 
+    if (!pracownikWykonujeUsluge($pdo, $pracownikId, (int) $usluga['id'])) {
+        return 'Wybrany pracownik nie wykonuje tej uslugi.';
+    }
+
     $praca = godzinyPracy($pdo, $pracownikId, $data);
     $od = minuty($godzina);
     $do = $od + (int) $usluga['czas_trwania'];
 
     if (!$praca || $od < minuty($praca['godzina_od']) || $do > minuty($praca['godzina_do'])) {
         return 'Ten termin wypada poza godzinami pracy pracownika.';
+    }
+
+    if (($od - minuty($praca['godzina_od'])) % KROK_MINUT !== 0) {
+        return 'Niepoprawna godzina rozpoczecia.';
     }
 
     if (koliduje($od, $do, zajeteTerminy($pdo, $pracownikId, $data))) {
