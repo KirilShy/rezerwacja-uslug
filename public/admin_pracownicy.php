@@ -228,10 +228,9 @@ naglowekAdmina($edytowany ? 'Pracownik: ' . $edytowany['imie'] . ' ' . $edytowan
 
 <?php if ($edytowany): ?>
     <?php
-    $przypisane = array_column(
-        $pdo->query('SELECT usluga_id FROM pracownicy_uslugi WHERE pracownik_id = ' . (int) $edytowany['id'])->fetchAll(),
-        'usluga_id'
-    );
+    $stmt = $pdo->prepare('SELECT usluga_id FROM pracownicy_uslugi WHERE pracownik_id = ?');
+    $stmt->execute([$edytowany['id']]);
+    $przypisane = $stmt->fetchAll(PDO::FETCH_COLUMN);
     $uslugi = $pdo->query(
         'SELECT u.id, u.nazwa, u.aktywna, k.nazwa AS kategoria
          FROM uslugi u JOIN kategorie_uslug k ON k.id = u.kategoria_id
