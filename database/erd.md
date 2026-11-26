@@ -6,6 +6,7 @@ erDiagram
     uzytkownicy ||--o{ rezerwacje : "tworzy"
     pracownicy ||--o{ rezerwacje : "obsluguje"
     pracownicy ||--o{ dostepnosc_pracownikow : "ma"
+    pracownicy ||--o{ dni_wolne : "ma urlop"
     pracownicy ||--o{ pracownicy_uslugi : "wykonuje"
     uslugi ||--o{ pracownicy_uslugi : "wykonywana przez"
     uslugi ||--o{ rezerwacje : "dotyczy"
@@ -84,5 +85,13 @@ erDiagram
         enum status_po
         int zmienil_id FK
         timestamp data_zmiany
+    }
+
+    dni_wolne {
+        int id PK
+        int pracownik_id FK
+        date data_od
+        date data_do
+        varchar powod
     }
 ```

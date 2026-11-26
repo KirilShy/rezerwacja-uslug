@@ -62,6 +62,17 @@ CREATE TABLE dostepnosc_pracownikow (
     CHECK (godzina_do > godzina_od)
 );
 
+CREATE TABLE dni_wolne (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    pracownik_id INT NOT NULL,
+    data_od DATE NOT NULL,
+    data_do DATE NOT NULL,
+    powod VARCHAR(255),
+    FOREIGN KEY (pracownik_id) REFERENCES pracownicy(id) ON DELETE CASCADE,
+    INDEX idx_pracownik_daty (pracownik_id, data_od, data_do),
+    CHECK (data_do >= data_od)
+);
+
 CREATE TABLE rezerwacje (
     id INT AUTO_INCREMENT PRIMARY KEY,
     uzytkownik_id INT NOT NULL,
@@ -141,6 +152,9 @@ INSERT INTO dostepnosc_pracownikow (pracownik_id, dzien_tygodnia, godzina_od, go
 (2, 6, '09:00:00', '13:00:00');
 
 -- daty liczone od dnia importu, zeby zawsze byly wizyty dzisiejsze, przyszle i zakonczone
+INSERT INTO dni_wolne (pracownik_id, data_od, data_do, powod) VALUES
+(2, CURDATE() + INTERVAL 14 DAY, CURDATE() + INTERVAL 20 DAY, 'Urlop');
+
 INSERT INTO rezerwacje (uzytkownik_id, pracownik_id, usluga_id, data_rezerwacji, godzina_od, godzina_do, status, komentarz) VALUES
 (4, 1, 1, CURDATE() - INTERVAL 14 DAY, '10:00:00', '10:30:00', 'zrealizowana', 'Komputer sie przegrzewa'),
 (5, 2, 3, CURDATE() - INTERVAL 7 DAY, '12:00:00', '13:30:00', 'zrealizowana', NULL),

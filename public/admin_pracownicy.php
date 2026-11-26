@@ -6,7 +6,7 @@ $blad = '';
 $akcja = $_SERVER['REQUEST_METHOD'] === 'POST' ? postTekst('akcja') : '';
 
 // edytowany pracownik: z adresu (?edytuj=3) albo z wyslanego formularza
-$edytowanyId = in_array($akcja, ['dane', 'uslugi', 'godziny'], true) ? liczba($_POST['id'] ?? '') : liczba($_GET['edytuj'] ?? '');
+$edytowanyId = in_array($akcja, ['dane', 'uslugi', 'godziny', 'wolne_dodaj', 'wolne_usun'], true) ? liczba($_POST['id'] ?? '') : liczba($_GET['edytuj'] ?? '');
 $edytowany = null;
 
 if ($edytowanyId > 0) {
@@ -107,6 +107,52 @@ if ($akcja === 'godziny') {
         ustawKomunikat('sukces', 'Zapisano godziny pracy.');
         przekieruj($powrot);
     }
+}
+
+if ($akcja === 'wolne_dodaj') {
+    $od = poprawnaData(postTekst('data_od'));
+    $do = poprawnaData(postTekst('data_do'));
+    $powod = postTekst('powod');
+
+    if (!$od || !$do) {
+        $blad = 'Podaj poprawne daty dnia wolnego.';
+    } elseif ($do < $od) {
+        $blad = 'Data konca nie moze byc wczesniejsza niz data poczatku.';
+    } elseif (mb_strlen($powod) > 255) {
+        $blad = 'Powod moze miec maksymalnie 255 znakow.';
+    } else {
+        $stmt = $pdo->prepare('INSERT INTO dni_wolne (pracownik_id, data_od, data_do, powod) VALUES (?, ?, ?, ?)');
+        $stmt->execute([$edytowanyId, $od, $do, $powod !== '' ? $powod : null]);
+
+        // istniejacych wizyt nie ruszamy, ale admin musi wiedziec, ze trzeba je przelozyc lub anulowac
+        $stmt = $pdo->prepare(
+            "SELECT COUNT(*) FROM rezerwacje
+             WHERE pracownik_id = ? AND data_rezerwacji BETWEEN ? AND ?
+               AND status IN ('oczekujaca', 'potwierdzona')"
+        );
+        $stmt->execute([$edytowanyId, $od, $do]);
+        $kolizje = (int) $stmt->fetchColumn();
+
+        ustawKomunikat(
+            $kolizje ? 'blad' : 'sukces',
+            $kolizje
+                ? "Dodano dzien wolny, ale w tym okresie pracownik ma $kolizje aktywnych rezerwacji. Sprawdz je w zakladce Rezerwacje."
+                : 'Dodano dzien wolny.'
+        );
+        przekieruj($powrot);
+    }
+}
+
+if ($akcja === 'wolne_usun') {
+    // warunek na pracownika: nie da sie usunac cudzego dnia wolnego podmieniajac id
+    $stmt = $pdo->prepare('DELETE FROM dni_wolne WHERE id = ? AND pracownik_id = ?');
+    $stmt->execute([liczba($_POST['wolne_id'] ?? ''), $edytowanyId]);
+
+    ustawKomunikat(
+        $stmt->rowCount() ? 'sukces' : 'blad',
+        $stmt->rowCount() ? 'Usunieto dzien wolny.' : 'Nie znaleziono dnia wolnego.'
+    );
+    przekieruj($powrot);
 }
 
 // nieaktywny pracownik znika z wyboru przy rezerwacji, ale jego wizyty zostaja
@@ -241,6 +287,48 @@ naglowekAdmina($edytowany ? 'Pracownik: ' . $edytowany['imie'] . ' ' . $edytowan
             </div>
         <?php endforeach; ?>
         <button type="submit">Zapisz godziny</button>
+    </form>
+
+    <h2>Dni wolne i urlopy</h2>
+    <?php
+    $stmt = $pdo->prepare('SELECT id, data_od, data_do, powod FROM dni_wolne WHERE pracownik_id = ? AND data_do >= CURDATE() ORDER BY data_od');
+    $stmt->execute([$edytowany['id']]);
+    $wolne = $stmt->fetchAll();
+    ?>
+    <?php if (!$wolne): ?>
+        <p>Brak zaplanowanych dni wolnych.</p>
+    <?php else: ?>
+        <div class="tabela">
+            <table>
+                <tr><th>Od</th><th>Do</th><th>Powod</th><th></th></tr>
+                <?php foreach ($wolne as $w): ?>
+                    <tr>
+                        <td><?= data($w['data_od']) ?></td>
+                        <td><?= data($w['data_do']) ?></td>
+                        <td><?= e($w['powod']) ?></td>
+                        <td>
+                            <form method="post" class="w-linii" data-potwierdz="Usunac ten dzien wolny?">
+                                <?= csrfPole() ?>
+                                <input type="hidden" name="akcja" value="wolne_usun">
+                                <input type="hidden" name="id" value="<?= (int) $edytowany['id'] ?>">
+                                <input type="hidden" name="wolne_id" value="<?= (int) $w['id'] ?>">
+                                <button type="submit" class="maly niebezpieczny">Usun</button>
+                            </form>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </table>
+        </div>
+    <?php endif; ?>
+
+    <form method="post" class="edycja">
+        <?= csrfPole() ?>
+        <input type="hidden" name="akcja" value="wolne_dodaj">
+        <input type="hidden" name="id" value="<?= (int) $edytowany['id'] ?>">
+        <label>Od: <input type="date" name="data_od" required value="<?= e($akcja === 'wolne_dodaj' ? postTekst('data_od') : '') ?>"></label>
+        <label>Do: <input type="date" name="data_do" required value="<?= e($akcja === 'wolne_dodaj' ? postTekst('data_do') : '') ?>"></label>
+        <label>Powod (opcjonalnie): <input type="text" name="powod" maxlength="255" value="<?= e($akcja === 'wolne_dodaj' ? postTekst('powod') : '') ?>"></label>
+        <button type="submit">Dodaj dzien wolny</button>
     </form>
 <?php else: ?>
 

@@ -90,11 +90,23 @@ function dniPracy(PDO $pdo, int $pracownikId): array
     return $stmt->fetchAll();
 }
 
+// urlop albo inny dzien wolny pracownika (tabela dni_wolne)
+function dzienWolny(PDO $pdo, int $pracownikId, string $data): bool
+{
+    $stmt = $pdo->prepare(
+        'SELECT 1 FROM dni_wolne WHERE pracownik_id = ? AND ? BETWEEN data_od AND data_do LIMIT 1'
+    );
+    $stmt->execute([$pracownikId, $data]);
+
+    return (bool) $stmt->fetchColumn();
+}
+
+// godziny pracy w danym dniu albo null, gdy pracownik nie pracuje (dzien tygodnia bez godzin lub urlop)
 function godzinyPracy(PDO $pdo, int $pracownikId, string $data): ?array
 {
     $d = DateTimeImmutable::createFromFormat('!Y-m-d', $data);
 
-    if (!$d) {
+    if (!$d || dzienWolny($pdo, $pracownikId, $data)) {
         return null;
     }
 
@@ -170,6 +182,10 @@ function bladTerminu(PDO $pdo, array $usluga, int $pracownikId, string $data, st
 
     if (!pracownikWykonujeUsluge($pdo, $pracownikId, (int) $usluga['id'])) {
         return 'Wybrany pracownik nie wykonuje tej uslugi.';
+    }
+
+    if (dzienWolny($pdo, $pracownikId, $data)) {
+        return 'Pracownik ma w tym dniu wolne.';
     }
 
     $praca = godzinyPracy($pdo, $pracownikId, $data);
