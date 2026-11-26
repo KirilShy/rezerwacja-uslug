@@ -48,6 +48,36 @@ $zrodlo = 'FROM rezerwacje r
      JOIN uslugi u ON u.id = r.usluga_id
      WHERE ' . implode(' AND ', $warunki);
 
+// eksport do CSV: te same filtry co lista, wszystkie wiersze bez stronicowania
+if ($get('eksport') === 'csv') {
+    $stmt = $pdo->prepare(
+        "SELECT r.id, r.data_rezerwacji, r.godzina_od, r.godzina_do, r.status,
+                CONCAT(kl.imie, ' ', kl.nazwisko) AS klient, kl.email, kl.telefon,
+                u.nazwa AS usluga, CONCAT(pu.imie, ' ', pu.nazwisko) AS pracownik, u.cena, r.komentarz
+         $zrodlo
+         ORDER BY r.data_rezerwacji, r.godzina_od"
+    );
+    $stmt->execute($parametry);
+
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="rezerwacje-' . date('Y-m-d') . '.csv"');
+
+    $plik = fopen('php://output', 'w');
+    // BOM i srednik, zeby polski Excel od razu poprawnie otworzyl plik
+    fwrite($plik, "\xEF\xBB\xBF");
+    fputcsv($plik, ['ID', 'Data', 'Od', 'Do', 'Status', 'Klient', 'Email', 'Telefon', 'Usluga', 'Pracownik', 'Cena', 'Komentarz'], ';', '"', '');
+
+    foreach ($stmt as $r) {
+        $r['status'] = nazwaStatusu($r['status']);
+        // tekst zaczynajacy sie od = + - @ Excel potraktowalby jak formule, wiec poprzedzamy go apostrofem
+        $r = array_map(fn ($v) => is_string($v) && preg_match('/^[=+\-@]/', $v) ? "'" . $v : $v, $r);
+        fputcsv($plik, $r, ';', '"', '');
+    }
+
+    fclose($plik);
+    exit;
+}
+
 $stmt = $pdo->prepare("SELECT COUNT(*) $zrodlo");
 $stmt->execute($parametry);
 $wszystkich = (int) $stmt->fetchColumn();
@@ -104,7 +134,13 @@ naglowekAdmina('Rezerwacje');
     <button type="submit">Filtruj</button>
 </form>
 
-<p>Znaleziono: <?= $wszystkich ?>. <a href="admin_rezerwacje.php">Wyczysc filtry</a></p>
+<p>
+    Znaleziono: <?= $wszystkich ?>.
+    <a href="admin_rezerwacje.php">Wyczysc filtry</a>
+    <?php if ($wszystkich): ?>
+        | <a href="<?= e(adresFiltra($filtr, ['eksport' => 'csv'])) ?>">Eksportuj do CSV</a>
+    <?php endif; ?>
+</p>
 
 <?php if ($rezerwacje): ?>
     <div class="tabela">
