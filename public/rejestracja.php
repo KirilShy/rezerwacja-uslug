@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/wspolne.php';
 require_once __DIR__ . '/../includes/csrf.php';
 require_once __DIR__ . '/../config/database.php';
 
@@ -13,17 +14,21 @@ $blad = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     sprawdzCsrf();
 
-    $imie = trim($_POST['imie'] ?? '');
-    $nazwisko = trim($_POST['nazwisko'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $telefon = trim($_POST['telefon'] ?? '');
-    $haslo = $_POST['haslo'] ?? '';
-    $haslo2 = $_POST['haslo2'] ?? '';
+    $imie = postTekst('imie');
+    $nazwisko = postTekst('nazwisko');
+    $email = postTekst('email');
+    $telefon = postTekst('telefon');
+    $haslo = is_string($_POST['haslo'] ?? null) ? $_POST['haslo'] : '';
+    $haslo2 = is_string($_POST['haslo2'] ?? null) ? $_POST['haslo2'] : '';
 
-    if ($imie === '' || $nazwisko === '' || $email === '' || $haslo === '') {
-        $blad = 'Wszystkie pola oprocz telefonu sa wymagane.';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    if ($imie === '' || $nazwisko === '' || $email === '' || $telefon === '' || $haslo === '') {
+        $blad = 'Wypelnij wszystkie pola.';
+    } elseif (mb_strlen($imie) > 50 || mb_strlen($nazwisko) > 50) {
+        $blad = 'Imie i nazwisko moga miec maksymalnie 50 znakow.';
+    } elseif (mb_strlen($email) > 100 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $blad = 'Podaj poprawny adres email.';
+    } elseif (!preg_match('/^[0-9 +-]{6,20}$/', $telefon)) {
+        $blad = 'Podaj poprawny numer telefonu.';
     } elseif (strlen($haslo) < 6) {
         $blad = 'Haslo musi miec co najmniej 6 znakow.';
     } elseif ($haslo !== $haslo2) {
@@ -49,33 +54,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+naglowekStrony('Rejestracja', menuGlowne());
 ?>
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Rejestracja - serwis komputerowy</title>
-    <link rel="stylesheet" href="../css/style.css">
-</head>
-<body>
-    <h1>Rejestracja</h1>
+<?php if ($blad): ?>
+    <p class="blad" role="alert"><?= e($blad) ?></p>
+<?php endif; ?>
 
-    <?php if ($blad): ?>
-        <p class="blad"><?= htmlspecialchars($blad) ?></p>
-    <?php endif; ?>
+<form method="post">
+    <?= csrfPole() ?>
+    <label>Imię: <input type="text" name="imie" maxlength="50" required value="<?= e(postTekst('imie')) ?>"></label>
+    <label>Nazwisko: <input type="text" name="nazwisko" maxlength="50" required value="<?= e(postTekst('nazwisko')) ?>"></label>
+    <label>Email: <input type="email" name="email" maxlength="100" autocomplete="email" required value="<?= e(postTekst('email')) ?>"></label>
+    <label>Telefon: <input type="tel" name="telefon" maxlength="20" required value="<?= e(postTekst('telefon')) ?>"></label>
+    <label>Hasło: <input type="password" name="haslo" minlength="6" autocomplete="new-password" required></label>
+    <label>Powtórz hasło: <input type="password" name="haslo2" minlength="6" autocomplete="new-password" required></label>
+    <button type="submit">Zarejestruj się</button>
+</form>
 
-    <form method="post">
-        <?= csrfPole() ?>
-        <label>Imie: <input type="text" name="imie" value="<?= htmlspecialchars($_POST['imie'] ?? '') ?>"></label><br>
-        <label>Nazwisko: <input type="text" name="nazwisko" value="<?= htmlspecialchars($_POST['nazwisko'] ?? '') ?>"></label><br>
-        <label>Email: <input type="email" name="email" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"></label><br>
-        <label>Telefon: <input type="text" name="telefon" value="<?= htmlspecialchars($_POST['telefon'] ?? '') ?>"></label><br>
-        <label>Haslo: <input type="password" name="haslo"></label><br>
-        <label>Powtorz haslo: <input type="password" name="haslo2"></label><br>
-        <button type="submit">Zarejestruj sie</button>
-    </form>
-
-    <p>Masz juz konto? <a href="logowanie.php">Zaloguj sie</a></p>
-</body>
-</html>
+<p class="pod-formularzem">Masz już konto? <a href="logowanie.php">Zaloguj się</a></p>
+<?php
+stopkaStrony();
