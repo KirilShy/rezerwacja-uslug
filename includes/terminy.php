@@ -133,6 +133,8 @@ function zajeteTerminy(PDO $pdo, int $pracownikId, string $data): array
     return $stmt->fetchAll();
 }
 
+// dwie wizyty koliduja, gdy nowa zaczyna sie przed koncem istniejacej i konczy po jej poczatku
+// (10:00-11:00 blokuje 9:30-10:30, ale nie 9:00-10:00 ani 11:00-12:00)
 function koliduje(int $od, int $do, array $zajete): bool
 {
     foreach ($zajete as $z) {
