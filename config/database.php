@@ -17,9 +17,6 @@ if (is_file($configLocal)) {
 }
 
 try {
-    // Offset strefy liczony w momencie polaczenia (uwzglednia czas letni/zimowy)
-    $timeZoneOffset = (new DateTimeImmutable('now'))->format('P');
-
     $pdo = new PDO(
         'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4',
         DB_USER,
@@ -28,10 +25,12 @@ try {
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES   => false,
-            // Ustawienie strefy w jednym kroku, bez dodatkowego zapytania
-            PDO::MYSQL_ATTR_INIT_COMMAND => "SET time_zone = '{$timeZoneOffset}'",
         ]
     );
+
+    // MySQL (CURDATE, NOW) dostaje te sama strefe co PHP, z czasem letnim/zimowym;
+    // zwykle zapytanie zamiast PDO::MYSQL_ATTR_INIT_COMMAND, ktora w PHP 8.5 jest przestarzala
+    $pdo->exec("SET time_zone = '" . date('P') . "'");
 } catch (PDOException $e) {
     error_log('DB connection failed: ' . $e->getMessage());
     http_response_code(500);

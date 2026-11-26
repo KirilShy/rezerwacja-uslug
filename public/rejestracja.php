@@ -1,7 +1,7 @@
 <?php
 require __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/csrf.php';
-require __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/database.php';
 
 if (zalogowany()) {
     header('Location: ' . adresPanelu($_SESSION['user_rola']));
