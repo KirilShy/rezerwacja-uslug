@@ -579,3 +579,45 @@ label.pole-wyboru input {
     margin-top: var(--odstep-lg);
     text-align: center;
 }
+
+/* ===== statystyki na dashboardzie ===== */
+
+.statystyki {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--odstep-lg);
+}
+
+.statystyki .karta {
+    margin-bottom: 0;
+}
+
+.statystyki h3 {
+    margin: 0 0 var(--odstep-md);
+    font-size: 1rem;
+}
+
+.wykres-wiersz {
+    display: grid;
+    grid-template-columns: minmax(90px, 40%) 1fr 2.5em;
+    gap: var(--odstep-sm);
+    align-items: center;
+    margin-bottom: var(--odstep-sm);
+    font-size: 0.9rem;
+}
+
+.wykres-tlo {
+    height: 12px;
+    background: var(--kolor-tlo);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.wykres-pasek {
+    height: 100%;
+    background: var(--kolor-glowny);
+}
+
+.wykres-wiersz strong {
+    text-align: right;
+}
