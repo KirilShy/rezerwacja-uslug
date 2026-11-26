@@ -103,7 +103,7 @@ function naglowekStrony(string $tytul, array $linki): void
             <a href="wyloguj.php">Wyloguj</a>
         <?php else: ?>
             <a href="logowanie.php">Zaloguj</a>
-            <a href="rejestracja.php">Zarejestruj sie</a>
+            <a href="rejestracja.php">Zarejestruj się</a>
         <?php endif; ?>
     </nav>
 
@@ -112,6 +112,17 @@ function naglowekStrony(string $tytul, array $linki): void
             <p class="<?= $komunikat['typ'] === 'blad' ? 'blad' : 'sukces' ?>" role="alert"><?= e($komunikat['tekst']) ?></p>
         <?php endif; ?>
     <?php
+}
+
+// menu stron wspolnych (oferta, rezerwacja, logowanie, profil) zalezne od roli
+function menuGlowne(): array
+{
+    return match ($_SESSION['user_rola'] ?? '') {
+        'klient' => ['index.php' => 'Oferta', 'rezerwacja.php' => 'Rezerwacja', 'panel_klienta.php' => 'Moje rezerwacje'],
+        'pracownik' => ['index.php' => 'Oferta', 'panel_pracownika.php' => 'Moje wizyty'],
+        'administrator' => ['index.php' => 'Oferta', 'panel_admina.php' => 'Panel administratora'],
+        default => ['index.php' => 'Oferta', 'rezerwacja.php' => 'Rezerwacja'],
+    };
 }
 
 function linkiAdmina(): array

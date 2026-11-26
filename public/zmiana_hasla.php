@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/wspolne.php';
 require_once __DIR__ . '/../includes/csrf.php';
 require_once __DIR__ . '/../config/database.php';
 wymagajLogowania();
@@ -36,37 +37,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sukces = 'Haslo zostalo zmienione.';
     }
 }
+
+naglowekStrony('Zmiana hasła', ['profil.php' => 'Moje konto'] + menuGlowne());
 ?>
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Zmiana hasla - serwis komputerowy</title>
-    <link rel="stylesheet" href="../css/style.css">
-</head>
-<body>
-    <h1>Zmiana hasla</h1>
+<?php if ($blad): ?>
+    <p class="blad" role="alert"><?= e($blad) ?></p>
+<?php endif; ?>
+<?php if ($sukces): ?>
+    <p class="sukces" role="alert"><?= e($sukces) ?></p>
+<?php endif; ?>
 
-    <nav>
-        <a href="profil.php">Moje konto</a>
-        | <a href="<?= adresPanelu($_SESSION['user_rola']) ?>">Moj panel</a>
-        | <a href="wyloguj.php">Wyloguj</a>
-    </nav>
-
-    <?php if ($blad): ?>
-        <p class="blad"><?= htmlspecialchars($blad) ?></p>
-    <?php endif; ?>
-    <?php if ($sukces): ?>
-        <p class="sukces"><?= htmlspecialchars($sukces) ?></p>
-    <?php endif; ?>
-
-    <form method="post">
-        <?= csrfPole() ?>
-        <label>Obecne haslo: <input type="password" name="stare_haslo"></label>
-        <label>Nowe haslo: <input type="password" name="nowe_haslo"></label>
-        <label>Powtorz nowe haslo: <input type="password" name="nowe_haslo2"></label>
-        <button type="submit">Zmien haslo</button>
-    </form>
-</body>
-</html>
+<form method="post" class="edycja">
+    <?= csrfPole() ?>
+    <label>Obecne hasło: <input type="password" name="stare_haslo" autocomplete="current-password" required></label>
+    <label>Nowe hasło: <input type="password" name="nowe_haslo" minlength="6" autocomplete="new-password" required></label>
+    <label>Powtórz nowe hasło: <input type="password" name="nowe_haslo2" minlength="6" autocomplete="new-password" required></label>
+    <button type="submit">Zmień hasło</button>
+</form>
+<?php
+stopkaStrony();

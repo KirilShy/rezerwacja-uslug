@@ -50,7 +50,7 @@ $w = $stmt->fetch(PDO::FETCH_ASSOC);
 
 $linki = $rola === 'administrator'
     ? linkiAdmina()
-    : ['panel_pracownika.php' => 'Moje wizyty'];
+    : menuGlowne();
 
 if (!$w) {
     http_response_code(404);

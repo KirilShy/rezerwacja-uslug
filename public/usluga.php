@@ -6,7 +6,7 @@ $usluga = aktywnaUsluga($pdo, liczba($_GET['id'] ?? ''));
 
 if (!$usluga) {
     http_response_code(404);
-    naglowekStrony('Nie znaleziono uslugi', ['index.php' => 'Oferta']);
+    naglowekStrony('Nie znaleziono uslugi', menuGlowne());
     echo '<p>Ta usluga nie istnieje albo nie jest juz dostepna.</p>';
     stopkaStrony();
     exit;
@@ -14,7 +14,7 @@ if (!$usluga) {
 
 $pracownicy = pracownicyUslugi($pdo, (int) $usluga['id']);
 
-naglowekStrony($usluga['nazwa'], ['index.php' => 'Oferta']);
+naglowekStrony($usluga['nazwa'], menuGlowne());
 ?>
 <div class="karta">
     <dl>

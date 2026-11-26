@@ -3,14 +3,9 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/wspolne.php';
 require_once __DIR__ . '/../config/database.php';
 
-if (!function_exists('e')) {
-    function e(?string $wartosc): string
-    {
-        return htmlspecialchars($wartosc ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-    }
-}
 
 // ?kategoria=ID pokazuje tylko jedna kategorie
 $wybranaKategoria = isset($_GET['kategoria']) && is_string($_GET['kategoria']) && ctype_digit($_GET['kategoria'])
@@ -60,33 +55,9 @@ foreach ($wyniki as $wiersz) {
 
 unset($wyniki);
 
-$zalogowany = zalogowany();
-$imie       = $_SESSION['user_imie'] ?? '';
-$rola       = $_SESSION['user_rola'] ?? '';
+
+naglowekStrony('Serwis komputerowy - rezerwacja usług', menuGlowne());
 ?>
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Serwis komputerowy - rezerwacja usług</title>
-    <link rel="stylesheet" href="../css/style.css">
-</head>
-<body>
-
-    <h1>System rezerwacji usług - serwis komputerowy</h1>
-
-    <nav>
-        <?php if ($zalogowany): ?>
-            <span>Witaj, <?= e($imie) ?></span>
-            | <a href="<?= e(adresPanelu($rola)) ?>">Mój panel</a>
-            | <a href="wyloguj.php">Wyloguj</a>
-        <?php else: ?>
-            <a href="logowanie.php">Zaloguj</a>
-            | <a href="rejestracja.php">Zarejestruj się</a>
-        <?php endif; ?>
-    </nav>
-
     <p class="filtr-kategorii">
         Kategoria:
         <a href="index.php"<?= $wybranaKategoria === 0 ? ' aria-current="page"' : '' ?>>Wszystkie</a>
@@ -95,7 +66,7 @@ $rola       = $_SESSION['user_rola'] ?? '';
         <?php endforeach; ?>
     </p>
 
-    <main class="uslugi">
+    <div class="uslugi">
         <?php foreach ($kategorie as $kategoria): ?>
             <section class="kategoria">
                 <h2><?= e($kategoria['nazwa']) ?></h2>
@@ -127,7 +98,6 @@ $rola       = $_SESSION['user_rola'] ?? '';
         <?php if (!$kategorie): ?>
             <p>Nie znaleziono kategorii.</p>
         <?php endif; ?>
-    </main>
-
-</body>
-</html>
+    </div>
+<?php
+stopkaStrony();

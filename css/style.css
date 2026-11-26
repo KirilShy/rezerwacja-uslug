@@ -153,7 +153,8 @@ textarea:focus {
     box-shadow: 0 0 0 3px rgb(31 78 121 / 15%);
 }
 
-label input,
+/* pole wewnatrz etykiety nie dziedziczy jej pogrubienia (font: inherit wyzej) */
+label input:not([type="checkbox"], [type="radio"]),
 label select,
 label textarea {
     font-weight: 400;
@@ -569,4 +570,12 @@ label.pole-wyboru input {
     button:active:not(:disabled) {
         transform: none;
     }
+}
+
+/* ===== wspolny uklad stron ===== */
+
+
+.pod-formularzem {
+    margin-top: var(--odstep-lg);
+    text-align: center;
 }

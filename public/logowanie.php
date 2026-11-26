@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/wspolne.php';
 require_once __DIR__ . '/../config/database.php';
 
 if (zalogowany()) {
@@ -117,72 +118,26 @@ function zarejestrujProbe(PDO $pdo, string $email): void
     ]);
 }
 
-/**
- * Bezpiecznie koduje tekst wyświetlany w HTML.
- */
-function e(?string $wartosc): string
-{
-    return htmlspecialchars(
-        $wartosc ?? '',
-        ENT_QUOTES | ENT_SUBSTITUTE,
-        'UTF-8'
-    );
-}
 
+
+naglowekStrony('Logowanie', menuGlowne());
 ?>
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Logowanie - serwis komputerowy</title>
-    <link rel="stylesheet" href="../css/style.css">
-</head>
-<body>
-    <main>
-        <h1>Logowanie</h1>
+<?php if ($blad !== ''): ?>
+    <p class="blad" role="alert"><?= e($blad) ?></p>
+<?php endif; ?>
 
-        <?php if ($blad !== ''): ?>
-            <p class="blad" role="alert">
-                <?= e($blad) ?>
-            </p>
-        <?php endif; ?>
+<form method="post" action="logowanie.php">
+    <input type="hidden" name="csrf_token" value="<?= e($_SESSION['csrf_token']) ?>">
 
-        <form method="post" action="logowanie.php">
-            <input
-                type="hidden"
-                name="csrf_token"
-                value="<?= e($_SESSION['csrf_token']) ?>"
-            >
+    <label for="email">Adres email:</label>
+    <input type="email" id="email" name="email" value="<?= e($email) ?>" autocomplete="username" maxlength="254" required autofocus>
 
-            <label for="email">Adres email:</label>
-            <input
-                type="email"
-                id="email"
-                name="email"
-                value="<?= e($email) ?>"
-                autocomplete="username"
-                maxlength="254"
-                required
-                autofocus
-            >
+    <label for="haslo">Hasło:</label>
+    <input type="password" id="haslo" name="haslo" autocomplete="current-password" required>
 
-            <label for="haslo">Hasło:</label>
-            <input
-                type="password"
-                id="haslo"
-                name="haslo"
-                autocomplete="current-password"
-                required
-            >
+    <button type="submit">Zaloguj się</button>
+</form>
 
-            <button type="submit">Zaloguj się</button>
-        </form>
-
-        <p>
-            Nie masz konta?
-            <a href="rejestracja.php">Zarejestruj się</a>
-        </p>
-    </main>
-</body>
-</html>
+<p class="pod-formularzem">Nie masz konta? <a href="rejestracja.php">Zarejestruj się</a></p>
+<?php
+stopkaStrony();

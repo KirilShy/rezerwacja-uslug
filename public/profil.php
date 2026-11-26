@@ -3,17 +3,12 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/wspolne.php';
 require_once __DIR__ . '/../includes/csrf.php';
 require_once __DIR__ . '/../config/database.php';
 
 wymagajLogowania();
 
-if (!function_exists('e')) {
-    function e(?string $wartosc): string
-    {
-        return htmlspecialchars($wartosc ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-    }
-}
 
 $userId = (int) $_SESSION['user_id'];
 $rola   = $_SESSION['user_rola'] ?? '';
@@ -57,55 +52,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sukces = 'Dane zostały zapisane.';
     }
 }
+
+naglowekStrony('Moje konto', menuGlowne());
 ?>
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Moje konto - serwis komputerowy</title>
-    <link rel="stylesheet" href="../css/style.css">
-</head>
-<body>
+<?php if ($blad): ?>
+    <p class="blad" role="alert"><?= e($blad) ?></p>
+<?php endif; ?>
 
-    <h1>Moje konto</h1>
+<?php if ($sukces): ?>
+    <p class="sukces" role="alert"><?= e($sukces) ?></p>
+<?php endif; ?>
 
-    <nav>
-        <a href="<?= e(adresPanelu($rola)) ?>">Mój panel</a>
-        | <a href="index.php">Strona główna</a>
-        | <a href="wyloguj.php">Wyloguj</a>
-    </nav>
+<form method="post" class="edycja">
+    <?= csrfPole() ?>
+    <label>Email: <input type="email" value="<?= e($uzytkownik['email']) ?>" disabled></label>
+    <label>Imię: <input type="text" name="imie" maxlength="50" required value="<?= e($imie) ?>"></label>
+    <label>Nazwisko: <input type="text" name="nazwisko" maxlength="50" required value="<?= e($nazwisko) ?>"></label>
+    <label>Telefon: <input type="tel" name="telefon" maxlength="20" value="<?= e($telefon) ?>"></label>
+    <button type="submit">Zapisz</button>
+</form>
 
-    <?php if ($blad): ?>
-        <p class="blad"><?= e($blad) ?></p>
-    <?php endif; ?>
-
-    <?php if ($sukces): ?>
-        <p class="sukces"><?= e($sukces) ?></p>
-    <?php endif; ?>
-
-    <form method="post">
-        <?= csrfPole() ?>
-        <label>Email:
-            <input type="email" value="<?= e($uzytkownik['email']) ?>" disabled>
-        </label><br>
-
-        <label>Imię:
-            <input type="text" name="imie" maxlength="50" required value="<?= e($imie) ?>">
-        </label><br>
-
-        <label>Nazwisko:
-            <input type="text" name="nazwisko" maxlength="50" required value="<?= e($nazwisko) ?>">
-        </label><br>
-
-        <label>Telefon:
-            <input type="tel" name="telefon" maxlength="20" value="<?= e($telefon) ?>">
-        </label><br>
-
-        <button type="submit">Zapisz</button>
-    </form>
-
-    <p><a href="zmiana_hasla.php">Zmień hasło</a></p>
-
-</body>
-</html>
+<p class="pod-formularzem"><a href="zmiana_hasla.php">Zmień hasło</a></p>
+<?php
+stopkaStrony();

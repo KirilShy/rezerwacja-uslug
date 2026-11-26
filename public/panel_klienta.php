@@ -41,11 +41,7 @@ $rezerwacje = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $przyszle = array_filter($rezerwacje, fn ($r) => $r['przyszla']);
 $pozostale = array_reverse(array_filter($rezerwacje, fn ($r) => !$r['przyszla']));
 
-naglowekStrony('Panel klienta', [
-    'panel_klienta.php' => 'Moje rezerwacje',
-    'rezerwacja.php' => 'Nowa rezerwacja',
-    'index.php' => 'Oferta',
-]);
+naglowekStrony('Panel klienta', menuGlowne());
 
 function tabelaRezerwacji(array $lista, bool $przyszle): void
 {

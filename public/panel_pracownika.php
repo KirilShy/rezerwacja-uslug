@@ -31,7 +31,7 @@ $sekcje = [
     'Historia' => wizyty($pdo, $pracownikId, 'r.data_rezerwacji < CURDATE()', 'r.data_rezerwacji DESC, r.godzina_od DESC'),
 ];
 
-naglowekStrony('Panel pracownika', ['panel_pracownika.php' => 'Moje wizyty']);
+naglowekStrony('Panel pracownika', menuGlowne());
 ?>
 <p>Witaj, <?= e($_SESSION['user_imie']) ?>.</p>
 

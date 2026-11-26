@@ -32,10 +32,7 @@ $krok = match (true) {
 
 $bazowyAdres = 'rezerwacja.php?usluga=' . ($usluga['id'] ?? 0) . '&pracownik=' . $pracownikId;
 
-naglowekStrony('Rezerwacja terminu', [
-    'index.php' => 'Oferta',
-    'rezerwacja.php' => 'Rezerwacja',
-] + (zalogowany() ? [adresPanelu($_SESSION['user_rola']) => 'Moj panel'] : []));
+naglowekStrony('Rezerwacja terminu', menuGlowne());
 ?>
 <ol class="kroki">
     <?php foreach ([1 => 'Usluga', 2 => 'Pracownik', 3 => 'Data', 4 => 'Godzina', 5 => 'Potwierdzenie'] as $nr => $nazwa): ?>
