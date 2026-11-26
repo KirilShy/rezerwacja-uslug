@@ -112,12 +112,13 @@ naglowekStrony('Rezerwacja terminu', menuGlowne());
             <?php endif; ?>
         <?php endfor; ?>
     </div>
-    <form method="get" class="filtry">
+    <form method="get" class="filtry" data-terminy="<?= e('terminy_json.php?usluga=' . $usluga['id'] . '&pracownik=' . $pracownikId) ?>">
         <input type="hidden" name="usluga" value="<?= (int) $usluga['id'] ?>">
         <input type="hidden" name="pracownik" value="<?= $pracownikId ?>">
         <label>Inna data: <input type="date" name="data" min="<?= date('Y-m-d') ?>" required></label>
         <button type="submit">Pokaz godziny</button>
     </form>
+    <div id="godziny-ajax" class="wybor" aria-live="polite"></div>
 
 <?php elseif ($krok === 4): ?>
     <h2>Wybierz godzine</h2>
