@@ -27,6 +27,7 @@ Aplikacja internetowa do rezerwacji wizyt w serwisie komputerowym. Klient wybier
    php -S localhost:8000
    ```
 4. Otwórz w przeglądarce `http://localhost:8000`.
+5. Opcjonalnie uruchom testy: `php tests/testy.php`.
 
 ## Testowe konta
 
@@ -53,7 +54,11 @@ Wolne godziny są wyliczane z godzin pracy pracownika, czasu trwania usługi i i
 ## Funkcje dodatkowe
 
 - **Historia statusów**: każda zmiana statusu rezerwacji (klient, pracownik, administrator) jest zapisywana w tabeli `historia_statusow` i widoczna w szczegółach wizyty.
-- **Automatyczne wolne godziny**: przy wyborze daty widać liczbę wolnych terminów w najbliższych dniach pracy, a przy wyborze godziny tylko terminy, które się mieszczą.
+- **Dni wolne i urlopy**: administrator dodaje pracownikowi dni wolne (tabela `dni_wolne`). W te dni nie ma wolnych godzin, a serwer odrzuca rezerwację. Przy dodawaniu urlopu panel ostrzega o istniejących rezerwacjach w tym okresie.
+- **Automatyczne wolne godziny i AJAX**: przy wyborze daty widać liczbę wolnych terminów w najbliższych dniach pracy. Po wybraniu innej daty w kalendarzu godziny są pobierane z `terminy_json.php` bez przeładowania strony (bez JavaScriptu formularz działa jak zwykły formularz GET).
+- **Statystyki** na dashboardzie: przychód ze zrealizowanych wizyt, rezerwacje według statusu, najpopularniejsze usługi i obłożenie pracowników w najbliższym tygodniu.
+- **Eksport CSV** listy rezerwacji z aktualnymi filtrami (otwiera się poprawnie w polskim Excelu, tekst zaczynający się od `=` nie jest traktowany jak formuła).
+- **Testy automatyczne** logiki rezerwacji: `php tests/testy.php` (reguła nakładania przedziałów z dokumentu, godziny pracy, dni wolne, przeszłość). Testy działają w transakcji wycofywanej na końcu, więc nie zmieniają danych.
 - **Limit prób logowania**: po 5 nieudanych próbach na ten sam email logowanie jest blokowane na 15 minut.
 - **Zmiana hasła** po podaniu obecnego hasła.
 - **Tokeny CSRF** we wszystkich formularzach i bezpieczna sesja (`HttpOnly`, `SameSite`, nowe id sesji po zalogowaniu, wylogowanie zablokowanego konta).
@@ -67,6 +72,7 @@ config/     połączenie z bazą (dane lokalne w config.local.php)
 css/        style
 database/   database.sql i diagram ERD (erd.md)
 includes/   wspólny kod: sesja i role, CSRF, wolne terminy, statusy, szablon stron
-js/         potwierdzanie operacji usuwania i anulowania
+js/         potwierdzanie usuwania i anulowania, pobieranie wolnych godzin (AJAX)
 public/     strony aplikacji
+tests/      testy automatyczne (php tests/testy.php)
 ```
