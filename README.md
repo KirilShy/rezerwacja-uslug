@@ -2,6 +2,8 @@
 
 Aplikacja internetowa do rezerwacji wizyt w serwisie komputerowym. Klient wybiera usługę, pracownika, datę i wolną godzinę, a pracownik i administrator obsługują rezerwacje w swoich panelach.
 
+Wersja online: http://rezerwacja-uslug.infy.click (hosting InfinityFree)
+
 ## Autorzy
 
 - Kyrylo Shynkarenko
